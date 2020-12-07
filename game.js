@@ -1,5 +1,5 @@
 
-let public_URL = "https://graviscape.herokuapp.com/";
+let public_URL = "https://solar-escape.herokuapp.com/";
 let power = 150;
 let game;
 let turning_up = false;
