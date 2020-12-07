@@ -32,6 +32,7 @@ let transitioning = false;
 let newGame = function (){
     console.log("new phaser game")
     game.destroy();
+    $( "#thegame" ).empty();
     let gameConfig = {
         type: Phaser.AUTO,
         backgroundColor: 0x444444,
@@ -63,7 +64,7 @@ let newGame = function (){
 }
 window.onload = function() {
   
-    
+    $( "#thegame" ).empty();
     $.ajax({url: HS_URL, success: function(result){
         
         HS = JSON.parse(result);
