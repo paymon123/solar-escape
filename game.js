@@ -1,6 +1,6 @@
 
 let public_URL = "https://solar-escape.herokuapp.com/";
-let testing_multiplier = 10;
+let testing_multiplier = 1;
 let power = 175 * testing_multiplier;
 let game;
 let turning_up = false;
