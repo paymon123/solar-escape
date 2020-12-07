@@ -1475,8 +1475,8 @@ class Highscore extends Phaser.Scene {
         if(data_entered==false)return;
       
         console.log("new from highscores")
-        this.registry.destroy(); // destroy registry
-        this.events.off();
+        game.registry.destroy(); // destroy registry
+        game.events.off();
         newGame();
         
     }
