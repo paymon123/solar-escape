@@ -173,9 +173,10 @@ class Menu extends Phaser.Scene {
        
         this.input.on('pointerdown', function(pointer)
         {
-            console.log("highscore inp[ut down")
+            
             global_music.stop();
-            newGame()
+            menu_scene.scene.start('Playgame');
+            
 
         });
 
