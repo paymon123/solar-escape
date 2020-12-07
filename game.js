@@ -29,8 +29,46 @@ let global_music;
 let x_divisor = 4;
 let y_divisor = 4;
 let transitioning = false;
-function newGame(){
-    let gameConfig = {
+// function newGame(){
+//     let gameConfig = {
+//         type: Phaser.AUTO,
+//         backgroundColor: 0x444444,
+//         scale: {
+//             mode: Phaser.Scale.FIT,
+//             autoCenter: Phaser.Scale.CENTER_BOTH,
+//             parent: "thegame",
+//             width: 800,
+//             height: 400
+//         },dom: {
+//             createContainer: true
+//         },
+//         pixelArt: true,
+//         physics: {
+//             default: "arcade"
+//         },
+//         audio: {
+//             disableWebAudio: true
+//         }
+      
+//     }
+//     game = new Phaser.Game(gameConfig);
+//     menu_scene = game.scene.add("Menu", Menu, true);
+//     game_scene = game.scene.add("Playgame", Playgame, false);
+//     game_scene_1 = game.scene.add("Playgame_1", Playgame_1, false);
+//     game_scene_2 = game.scene.add("Playgame_2", Playgame_2, false);
+//     game_scene_3 = game.scene.add("Playgame_3", Playgame_3, false);
+//     highscore_scene = game.scene.add("Highscore", Highscore, false);
+// }
+window.onload = function() {
+  
+    
+    $.ajax({url: HS_URL, success: function(result){
+        
+        HS = JSON.parse(result);
+        console.log("got highscores" + HS)
+      }});
+
+      let gameConfig = {
         type: Phaser.AUTO,
         backgroundColor: 0x444444,
         scale: {
@@ -58,21 +96,10 @@ function newGame(){
     game_scene_2 = game.scene.add("Playgame_2", Playgame_2, false);
     game_scene_3 = game.scene.add("Playgame_3", Playgame_3, false);
     highscore_scene = game.scene.add("Highscore", Highscore, false);
-}
-window.onload = function() {
-  
-    
-    $.ajax({url: HS_URL, success: function(result){
-        
-        HS = JSON.parse(result);
-        console.log("got highscores" + HS)
-      }});
 
 
 
-
-
-    newGame();
+    //newGame();
     
     
 }
