@@ -20,8 +20,10 @@ let game_scene;
 let highscore_scene;
 let start_fuel = 10000;
 let data_entered = false;
+let music = false;;
+
 window.onload = function() {
-    
+  
     $.ajax({url: HS_URL, success: function(result){
         HS = JSON.parse(result);
       }});
@@ -59,6 +61,7 @@ class Menu extends Phaser.Scene {
 	
         super("Menu");
         menu_scene =this;
+        
 		
 
 		
@@ -66,9 +69,12 @@ class Menu extends Phaser.Scene {
 		
     preload()
     {
-        this.load.audio("menu_music", ["menu.mp3"]);
+        this.load.audio("menu_music", "assets/menu.mp3",{
+            instances: 1
+        });
         this.load.image('arrows', 'assets/arrows.png');
         this.load.bitmapFont('atari', 'assets/atari-smooth.png', 'assets/atari-smooth.xml');
+
     }
    
 	create() {
@@ -82,8 +88,16 @@ class Menu extends Phaser.Scene {
             loop: true,
             delay: 0
         }
-        var music = this.sound.add(menu_music, menu_config);
-        music.play();
+        // this.sound.on('decoded', 'menu_music');
+        // this.sound.decodeAudio("menu_music");
+        // game.sound.context.resume().resolve('Success').then(function(value){
+        //     console.log("function resolved");
+        //     this.sound.add('menu_music');
+        // this.sound.play('menu_music');})
+       
+        
+    
+        
 		this.cameras.main.setBackgroundColor('#000000')
 		
 		
@@ -92,10 +106,11 @@ class Menu extends Phaser.Scene {
        
         this.input.on('pointerdown', function(pointer)
         {
-          
+            
             currentScene++;
-          
+          music = false;
             menu_scene.scene.start("Playgame");
+
         });
 
         this.text.setText(["Menu"], 400, 200);
@@ -105,10 +120,15 @@ class Menu extends Phaser.Scene {
 }
    
 	update(){
-        if(currentScene!=0)return;
+        // if(music == false){
+        //     console.log("playing")
+        
+        // music=true}
+
+}
 
        
-	}
+	
 	
 	
 
