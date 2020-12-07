@@ -675,7 +675,7 @@ class Playgame_1 extends Phaser.Scene{
        
         this.stopThrottle();
         
-        game_scene_1.scene.start('Playgame_2');
+        game_scene_1.scene.start('Playgame');
 
     }
     else if (ship.body.x<=0-ship.body.width)
