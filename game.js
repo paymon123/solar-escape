@@ -207,6 +207,7 @@ class Playgame extends Phaser.Scene{
 
 
     create(){
+        console.log("playgame create called")
         this.add.image(0, 0, 'earth_art').setOrigin(0).setScale(1);
         let game_music_config = 
         {
@@ -517,6 +518,7 @@ class Playgame_1 extends Phaser.Scene{
 
     }
     create(){
+        console.log("playgame1 create")
         this.add.image(0, 0, 'mars_art').setOrigin(0).setScale(1);
         let game_music_config = 
         {
@@ -675,7 +677,7 @@ class Playgame_1 extends Phaser.Scene{
        
         this.stopThrottle();
         
-        game_scene_1.scene.start('Playgame');
+        game_scene_1.scene.start('Playgame_2');
 
     }
     else if (ship.body.x<=0-ship.body.width)
@@ -984,7 +986,7 @@ class Playgame_2 extends Phaser.Scene{
        
     
         this.stopThrottle();
-        game_scene_2.scene.start('Playgame_3');
+        game_scene_2.scene.start('Playgame_1');
 
     }
     else if (ship.body.x<=0-ship.body.width)
