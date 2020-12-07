@@ -40,7 +40,7 @@ let collision_enemies = [];
 let collision_positive = [];
 let newGame = function (){
     let public_URL = "https://solar-escape.herokuapp.com/";
-testing_multiplier = 10;
+
 power = 175 * testing_multiplier;
 game;
 turning_up = false;
@@ -66,8 +66,8 @@ highscore_scene;
 data_entered = false;
 m = false;
 global_music;
-x_divisor = 4;
-y_divisor = 4;
+x_divisor = 5;
+y_divisor = 5;
 transitioning = false;
 exploding = false;
     
