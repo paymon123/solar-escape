@@ -66,13 +66,24 @@ class Menu extends Phaser.Scene {
 		
     preload()
     {
+        this.load.audio("menu_music", ["menu.mp3"]);
         this.load.image('arrows', 'assets/arrows.png');
         this.load.bitmapFont('atari', 'assets/atari-smooth.png', 'assets/atari-smooth.xml');
     }
    
 	create() {
- 
-
+        let menu_config = 
+        {
+            mute: false,
+            volume: 1,
+            rate: 1,
+            detune: 0,
+            seek: 0,
+            loop: true,
+            delay: 0
+        }
+        var music = this.sound.add(menu_music, menu_config);
+        music.play();
 		this.cameras.main.setBackgroundColor('#000000')
 		
 		
@@ -381,10 +392,10 @@ class Highscore extends Phaser.Scene {
 		
 		this.input.keyboard.on('keydown_DOWN', this.page_down, this);
 		this.input.keyboard.on('keydown_UP', this.page_up, this);
-		
+		data_entered = false;
         if(win)
         {
-            data_entered = false;
+            
 
 
             
@@ -456,7 +467,10 @@ class Highscore extends Phaser.Scene {
 
         }
         else
-		this.showHighscore(0);
+        {
+        this.showHighscore(0);
+        data_entered=true;
+        }
 		
 
 		// this.element = this.add.dom(400, 225).createFromCache("nameform");
