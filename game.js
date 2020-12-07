@@ -30,7 +30,37 @@ let x_divisor = 4;
 let y_divisor = 4;
 let transitioning = false;
 let newGame = function (){
-    console.log("new phaser game")
+    let public_URL = "https://solar-escape.herokuapp.com/";
+testing_multiplier = 10;
+power = 175 * testing_multiplier;
+game;
+turning_up = false;
+turning_down = false;
+planet;
+ship;
+cursors;
+spaceKey;
+moving = false;
+currentFuel = 10000;
+HS;
+HS_URL = public_URL + "highscores";
+NEW_URL = public_URL + "newscore";
+win = false;
+
+menu_scene;
+game_scene;
+game_scene_1;
+game_scene_2;
+game_scene_3;
+highscore_scene;
+start_fuel = 10000;
+data_entered = false;
+m = false;
+global_music;
+x_divisor = 4;
+y_divisor = 4;
+transitioning = false;
+    
     game.destroy();
     $( "#thegame" ).empty();
     let gameConfig = {
