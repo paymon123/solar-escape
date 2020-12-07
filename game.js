@@ -29,7 +29,15 @@ let global_music;
 let x_divisor = 4;
 let y_divisor = 4;
 let transitioning = false;
-
+function newGame(){
+    game = new Phaser.Game(gameConfig);
+    menu_scene = game.scene.add("Menu", Menu, true);
+    game_scene = game.scene.add("Playgame", Playgame, false);
+    game_scene_1 = game.scene.add("Playgame_1", Playgame_1, false);
+    game_scene_2 = game.scene.add("Playgame_2", Playgame_2, false);
+    game_scene_3 = game.scene.add("Playgame_3", Playgame_3, false);
+    highscore_scene = game.scene.add("Highscore", Highscore, false);
+}
 window.onload = function() {
   
     
@@ -67,15 +75,7 @@ window.onload = function() {
     
     
 }
-function newGame(){
-    game = new Phaser.Game(gameConfig);
-    menu_scene = game.scene.add("Menu", Menu, true);
-    game_scene = game.scene.add("Playgame", Playgame, false);
-    game_scene_1 = game.scene.add("Playgame_1", Playgame_1, false);
-    game_scene_2 = game.scene.add("Playgame_2", Playgame_2, false);
-    game_scene_3 = game.scene.add("Playgame_3", Playgame_3, false);
-    highscore_scene = game.scene.add("Highscore", Highscore, false);
-}
+
 class Menu extends Phaser.Scene {
 	
 	constructor() {
