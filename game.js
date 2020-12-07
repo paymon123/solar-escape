@@ -1,4 +1,5 @@
 
+let public_URL = "https://graviscape.herokuapp.com/";
 let power = 150;
 let game;
 let turning_up = false;
@@ -10,8 +11,8 @@ let spaceKey;
 let moving = false;
 let currentFuel = 10000;
 let HS;
-let HS_URL = "http://localhost:3000/highscores";
-let NEW_URL = "http://localhost:3000/newscore";
+let HS_URL = public_URL + "highscores";
+let NEW_URL = public_URL + "newscore";
 let win = false;
 let currentScene = 0;
 let menu_scene;
@@ -364,14 +365,14 @@ class Highscore extends Phaser.Scene {
     }
     changeScene(pointer)
     {
-        if(win==true)return;
+        if(data_entered==false)return;
         currentScene=0;
        
         highscore_scene.scene.start('Menu')
         
     }
 	create() {
-   
+        
         this.text = this.add.bitmapText(100, 50, 'atari', '', 38);
 		this.cameras.main.setBackgroundColor('#000000')
 		this.input.on('pointerdown', this.changeScene);
@@ -382,7 +383,7 @@ class Highscore extends Phaser.Scene {
 		
         if(win)
         {
-
+            data_entered = false;
 
 
             
@@ -413,7 +414,7 @@ class Highscore extends Phaser.Scene {
                         function(data, status) {
                             
           
-                           
+                           data_entered = true;
                            highscore_scene.highscores = JSON.parse(data)
                            element.setVisible(false)
                            temp.setText([""])
