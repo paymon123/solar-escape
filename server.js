@@ -54,7 +54,8 @@ app.post('/newscore', async function (req, res) {
   try{
   let username = req.body.username;
   let score = req.body.score;
-
+console.log(username)
+console.log(score)
   let result= await db.query(
     `INSERT INTO scores VALUES ($1, $2)`,
     [username, score]
@@ -71,6 +72,7 @@ app.post('/newscore', async function (req, res) {
   res.send(JSON.stringify(r.rows));
   }catch(error)
   {
+    console.log(error.toString())
     res.send(error.toString());
   }
  
