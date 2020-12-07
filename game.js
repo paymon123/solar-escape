@@ -30,26 +30,6 @@ let x_divisor = 4;
 let y_divisor = 4;
 let transitioning = false;
 function newGame(){
-    game = new Phaser.Game(gameConfig);
-    menu_scene = game.scene.add("Menu", Menu, true);
-    game_scene = game.scene.add("Playgame", Playgame, false);
-    game_scene_1 = game.scene.add("Playgame_1", Playgame_1, false);
-    game_scene_2 = game.scene.add("Playgame_2", Playgame_2, false);
-    game_scene_3 = game.scene.add("Playgame_3", Playgame_3, false);
-    highscore_scene = game.scene.add("Highscore", Highscore, false);
-}
-window.onload = function() {
-  
-    
-    $.ajax({url: HS_URL, success: function(result){
-        
-        HS = JSON.parse(result);
-        console.log("got highscores" + HS)
-      }});
-
-
-
-
     let gameConfig = {
         type: Phaser.AUTO,
         backgroundColor: 0x444444,
@@ -71,6 +51,27 @@ window.onload = function() {
         }
       
     }
+    game = new Phaser.Game(gameConfig);
+    menu_scene = game.scene.add("Menu", Menu, true);
+    game_scene = game.scene.add("Playgame", Playgame, false);
+    game_scene_1 = game.scene.add("Playgame_1", Playgame_1, false);
+    game_scene_2 = game.scene.add("Playgame_2", Playgame_2, false);
+    game_scene_3 = game.scene.add("Playgame_3", Playgame_3, false);
+    highscore_scene = game.scene.add("Highscore", Highscore, false);
+}
+window.onload = function() {
+  
+    
+    $.ajax({url: HS_URL, success: function(result){
+        
+        HS = JSON.parse(result);
+        console.log("got highscores" + HS)
+      }});
+
+
+
+
+
     newGame();
     
     
@@ -145,7 +146,7 @@ class Menu extends Phaser.Scene {
         {
             
             global_music.stop();
-            menu_scene.scene.start("Playgame");
+            newGame()
 
         });
 
@@ -991,7 +992,7 @@ class Playgame_2 extends Phaser.Scene{
        
     
         this.stopThrottle();
-        game_scene_2.scene.start('Playgame_1');
+        game_scene_2.scene.start('Playgame_3');
 
     }
     else if (ship.body.x<=0-ship.body.width)
@@ -1278,7 +1279,7 @@ class Playgame_3 extends Phaser.Scene{
        
         win = true;
         this.stopThrottle();
-        game_scene_3.scene.start('Menu');
+        game_scene_3.scene.start('Highscore');
 
     }
     else if (ship.body.x<=0-ship.body.width)
@@ -1444,9 +1445,9 @@ class Highscore extends Phaser.Scene {
         if(data_entered==false)return;
       
        
-        this.registry.destroy(); // destroy registry
-        this.events.off();
-        newGame();
+        // this.registry.destroy(); // destroy registry
+        // this.events.off();
+        // newGame();
         
     }
 	create() {
