@@ -256,7 +256,7 @@ class Playgame extends Phaser.Scene{
     else if (ship.body.x<=0)
     {
        
-        win = true;
+        win = false;
         currentScene++;
         game_scene.scene.start('Highscore');
     }
