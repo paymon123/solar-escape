@@ -63,7 +63,11 @@ window.onload = function() {
         }
       
     }
+    newGame();
     
+    
+}
+function newGame(){
     game = new Phaser.Game(gameConfig);
     menu_scene = game.scene.add("Menu", Menu, true);
     game_scene = game.scene.add("Playgame", Playgame, false);
@@ -95,9 +99,7 @@ class Menu extends Phaser.Scene {
     }
    
 	create() {
-        this.registry.destroy(); 
-        this.events.off();
-        this.scene.restart();
+        
         win = false;
         currentFuel = start_fuel;
         let menu_config = 
@@ -1442,7 +1444,9 @@ class Highscore extends Phaser.Scene {
         if(data_entered==false)return;
       
        
-        highscore_scene.scene.start('Menu')
+        this.registry.destroy(); // destroy registry
+        this.events.off();
+        newGame();
         
     }
 	create() {
