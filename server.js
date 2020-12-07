@@ -36,6 +36,7 @@ app.get('/', function (req, res) {
 
 });
 app.get('/highscores', async function (req, res) {
+  try{
   let result =  await db.query(
     `SELECT username,
               score
@@ -43,9 +44,12 @@ app.get('/highscores', async function (req, res) {
           `
    
   );
+
  
   //console.log("returning select" +result.rows)
   res.send(JSON.stringify(result.rows));
+  }
+  catch(error){ res.send(error.toString());}
 
 });
 
@@ -57,7 +61,7 @@ app.post('/newscore', async function (req, res) {
 console.log(username)
 console.log(score)
   let result= await db.query(
-    `INSERT INTO scores VALUES ($1, $2)`,
+    `INSERT INTO scores (username,score) VALUES ($1, $2)`,
     [username, score]
   );
   
