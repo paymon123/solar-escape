@@ -50,6 +50,8 @@ app.get('/highscores', async function (req, res) {
 });
 
 app.post('/newscore', async function (req, res) {
+  console.log("new score")
+  try{
   let username = req.body.username;
   let score = req.body.score;
 
@@ -67,6 +69,10 @@ app.post('/newscore', async function (req, res) {
   );
   // console.log("result" + r.rows);
   res.send(JSON.stringify(r.rows));
+  }catch(error)
+  {
+    res.send(error.toString());
+  }
  
 
 
