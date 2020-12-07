@@ -29,7 +29,7 @@ let global_music;
 let x_divisor = 4;
 let y_divisor = 4;
 let transitioning = false;
-function newGame(){
+let newGame = function (){
     console.log("new phaser game")
     game.destroy();
     let gameConfig = {
@@ -173,7 +173,7 @@ class Menu extends Phaser.Scene {
        
         this.input.on('pointerdown', function(pointer)
         {
-            
+            console.log("highscore inp[ut down")
             global_music.stop();
             newGame()
 
