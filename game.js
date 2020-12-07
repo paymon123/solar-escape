@@ -95,6 +95,7 @@ class Menu extends Phaser.Scene {
     }
    
 	create() {
+        win = false;
         currentFuel = start_fuel;
         let menu_config = 
         {
@@ -364,13 +365,14 @@ class Playgame extends Phaser.Scene{
     if(ship.body.x >= game.config.width)
     {
        
-        
+        this.stopThrottle();
         
         game_scene.scene.start('Playgame_1');
 
     }
     else if (ship.body.x<=0-ship.body.width)
     {
+        this.stopThrottle();
        if(transitioning == false)
        transitioning =  true;
        else
@@ -671,14 +673,14 @@ class Playgame_1 extends Phaser.Scene{
     if(ship.body.x >= game.config.width)
     {
        
-       
+        this.stopThrottle();
         
         game_scene_1.scene.start('Playgame_2');
 
     }
     else if (ship.body.x<=0-ship.body.width)
     {
-       
+        this.stopThrottle();
         if(transitioning == false)
        transitioning =  true;
        else
@@ -981,13 +983,13 @@ class Playgame_2 extends Phaser.Scene{
     {
        
     
-        
+        this.stopThrottle();
         game_scene_2.scene.start('Playgame_3');
 
     }
     else if (ship.body.x<=0-ship.body.width)
     {
-       
+        this.stopThrottle();
         if(transitioning == false)
        transitioning =  true;
        else
@@ -1268,13 +1270,13 @@ class Playgame_3 extends Phaser.Scene{
     {
        
         win = true;
-        
+        this.stopThrottle();
         game_scene_3.scene.start('Highscore');
 
     }
     else if (ship.body.x<=0-ship.body.width)
     {
-       
+       this.stopThrottle();
         if(transitioning == false)
         transitioning =  true;
         else
