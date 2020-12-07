@@ -268,7 +268,7 @@ class Playgame extends Phaser.Scene{
         },
         //args: [],
         callbackScope: this,
-        loop: false
+        loop: true
     });
         
     this.input.keyboard.on('keydown_A', this.turn_up, this);
@@ -577,7 +577,7 @@ class Playgame_1 extends Phaser.Scene{
         },
         //args: [],
         callbackScope: this,
-        loop: false
+        loop: true
     });
         
     this.input.keyboard.on('keydown_A', this.turn_up, this);
@@ -884,7 +884,7 @@ class Playgame_2 extends Phaser.Scene{
         },
         //args: [],
         callbackScope: this,
-        loop: false
+        loop: true
     });
         
     this.input.keyboard.on('keydown_A', this.turn_up, this);
@@ -1173,7 +1173,7 @@ class Playgame_3 extends Phaser.Scene{
         },
         //args: [],
         callbackScope: this,
-        loop: false
+        loop: true
     });
         
     this.input.keyboard.on('keydown_A', this.turn_up, this);
