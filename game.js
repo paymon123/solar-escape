@@ -19,6 +19,7 @@ let menu_scene;
 let game_scene;
 let highscore_scene;
 let start_fuel = 10000;
+let data_entered = false;
 window.onload = function() {
     
     $.ajax({url: HS_URL, success: function(result){
