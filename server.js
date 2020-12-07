@@ -4,9 +4,12 @@ var app = express();
 const { Client } = require('pg');
 //const game = require("./game")
 
-let DB_URI = "postgresql://localhost:5432/phaser_game?user=postgres&password=postgres";
+let DB_URI = process.env.DATABASE_URL;
+console.log("DATABASE URI" + DB_URI)
 const db = new Client({
-  connectionString: DB_URI
+  connectionString: DB_URI,ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 
