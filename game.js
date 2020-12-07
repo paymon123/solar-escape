@@ -1,6 +1,6 @@
 
 let public_URL = "https://solar-escape.herokuapp.com/";
-let testing_multiplier = 1;
+let testing_multiplier = 10;
 let power = 175 * testing_multiplier;
 let game;
 let turning_up = false;
@@ -1542,7 +1542,7 @@ class Highscore extends Phaser.Scene {
 	
 	showHighscore(page) {
         this.highscores = HS
-        console.log("show highscores" + this,highscores)
+        console.log("show highscores" + this.highscores)
         this.highscores = this.highscores.sort(this.compare)
    
         let lineLength = 15;
