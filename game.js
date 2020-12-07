@@ -95,6 +95,9 @@ class Menu extends Phaser.Scene {
     }
    
 	create() {
+        this.registry.destroy(); 
+        this.events.off();
+        this.scene.restart();
         win = false;
         currentFuel = start_fuel;
         let menu_config = 
