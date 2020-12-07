@@ -1,6 +1,7 @@
 
 let public_URL = "https://solar-escape.herokuapp.com/";
-let power = 150;
+let testing_multiplier = 10;
+let power = 175 * testing_multiplier;
 let game;
 let turning_up = false;
 let turning_down = false;
@@ -17,10 +18,17 @@ let win = false;
 
 let menu_scene;
 let game_scene;
+let game_scene_1;
+let game_scene_2;
+let game_scene_3;
 let highscore_scene;
 let start_fuel = 10000;
 let data_entered = false;
-let m = false;;
+let m = false;
+let global_music;
+let x_divisor = 4;
+let y_divisor = 4;
+let transitioning = false;
 
 window.onload = function() {
   
@@ -57,6 +65,9 @@ window.onload = function() {
     game = new Phaser.Game(gameConfig);
     menu_scene = game.scene.add("Menu", Menu, true);
     game_scene = game.scene.add("Playgame", Playgame, false);
+    game_scene_1 = game.scene.add("Playgame_1", Playgame_1, false);
+    game_scene_2 = game.scene.add("Playgame_2", Playgame_2, false);
+    game_scene_3 = game.scene.add("Playgame_3", Playgame_3, false);
     highscore_scene = game.scene.add("Highscore", Highscore, false);
 }
 class Menu extends Phaser.Scene {
@@ -75,12 +86,14 @@ class Menu extends Phaser.Scene {
     {
         this.load.html('button', 'assets/audio.html');
         this.load.audio("menu_music", ["assets/menu.mp3"]);
-        this.load.image('arrows', 'assets/arrows.png');
+        
+        this.load.image('menu_art', 'assets/menu_art.jpg');
         this.load.bitmapFont('atari', 'assets/atari-smooth.png', 'assets/atari-smooth.xml');
 
     }
    
 	create() {
+        currentFuel = start_fuel;
         let menu_config = 
         {
             mute: false,
@@ -93,25 +106,22 @@ class Menu extends Phaser.Scene {
         }
     
         
-        // music = game.sound.context.resume();
-        // console.log(p)
-        // p.then(play_music,play_music);
-        // console.log("hllo")
-        var music = game.sound.add('menu_music', menu_config);
+        this.add.image(0, 0, 'menu_art').setOrigin(0).setScale(1);
+        global_music = game.sound.add('menu_music', menu_config);
         var element = this.add.dom(game.config.width-50, game.config.height-50).createFromCache('button');
-        $("button").css({"background": "url('../assets/unmute.png')"});
+        $("#mute").css({"background": "url('../assets/unmute.png')"});
        
-        $("button").click(function(){
+        $("#mute").click(function(){
             console.log("clicked")
             if(m){
                 m= false;
-            music.stop();
-            $("button").css({"background": "url('../assets/unmute.png')"});
+                global_music.stop();
+            $("#mute").css({"background": "url('../assets/unmute.png')"});
             }
             else{
                 m=true;
-                music.play();
-                $("button").css({"background": "url('../assets/mute.png')"});
+                global_music.play();
+                $("#mute").css({"background": "url('../assets/mute.png')"});
             }
     
         });
@@ -121,17 +131,17 @@ class Menu extends Phaser.Scene {
 		
 		
 	
-		this.text = this.add.bitmapText(100, 50, 'atari', '', 38);
+		//this.text = this.add.bitmapText(100, 50, 'atari', '', 38);
        
         this.input.on('pointerdown', function(pointer)
         {
             
-         
+            global_music.stop();
             menu_scene.scene.start("Playgame");
 
         });
 
-        this.text.setText(["Menu"], 400, 200);
+        //this.text.setText(["Menu"], 400, 200);
 		
 	
 					
@@ -170,6 +180,10 @@ class Playgame extends Phaser.Scene{
         this.counter = 3;
         this.text;
         this.timer;
+        transitioning = false;
+
+        
+
         
 
     }
@@ -177,9 +191,9 @@ class Playgame extends Phaser.Scene{
         
         this.load.bitmapFont('atari', 'assets/atari-smooth.png', 'assets/atari-smooth.xml');
         this.cameras.main.setBackgroundColor('#000000')
-    
+        this.load.audio("game_music", ["assets/gameplay.mp3"]);
         this.load.image('planet', 'assets/planet.png');
-        
+        this.load.image('earth_art', 'assets/earth.jpg');
 
         this.load.spritesheet('ship', 
     'assets/spaceship.png',
@@ -187,14 +201,57 @@ class Playgame extends Phaser.Scene{
 );
 
     }
+
+
     create(){
-        currentFuel = start_fuel;
-        this.counter=3;
+        this.add.image(0, 0, 'earth_art').setOrigin(0).setScale(1);
+        let game_music_config = 
+        {
+            mute: false,
+            volume: 1,
+            rate: 1,
+            detune: 0,
+            seek: 0,
+            loop: true,
+            delay: 0
+        }
+
+        global_music= game.sound.add('game_music', game_music_config);
+        var element = this.add.dom(game.config.width-50, game.config.height-50).createFromCache('button');
+        if(m)
+        {
+           global_music.play();
+        $("#mute").css({"background": "url('../assets/mute.png')"});
+
+        }
+        else
+        {
+        $("#mute").css({"background": "url('../assets/unmute.png')"});
+        }
+
+       
+        $("#mute").click(function(event){
+           
+            if(m){
+                m= false;
+                global_music.stop();
+            $("#mute").css({"background": "url('../assets/unmute.png')"});
+            }
+            else{
+                m=true;
+                global_music.play();
+                $("#mute").css({"background": "url('../assets/mute.png')"});
+            }
+    
+        });
+    
+        
+      
  
     this.text = this.add.bitmapText(400, 200, 'atari', '', 38).setOrigin(0.5).setCenterAlign().setInteractive();
 
     this.text.setText([
-        "Hold Space - " + this.counter
+        "Hold W - " + this.counter
     ]);
        
         
@@ -216,10 +273,11 @@ class Playgame extends Phaser.Scene{
     this.input.keyboard.on('keyup_A', this.turning_off_up, this);
     this.input.keyboard.on('keydown_D', this.turn_down, this);
     this.input.keyboard.on('keyup_D', this.turning_off_down, this);
-    this.input.keyboard.on('keydown_SPACE', this.throttle, this);
-    this.input.keyboard.on('keyup_SPACE', this.stopThrottle, this);
+    this.input.keyboard.on('keydown_W', this.throttle, this);
+    this.input.keyboard.on('keyup_W', this.stopThrottle, this);
     // cursors = this.input.keyboard.createCursorKeys();
     planet = this.physics.add.sprite(0, game.config.height/2, 'planet');
+    planet.setVisible(false);
     
     ship = this.physics.add.sprite(game.config.width/7+10,game.config.height/5+70, 'ship');
     
@@ -244,7 +302,623 @@ class Playgame extends Phaser.Scene{
 
    throttle (event) {
 
+    
   
+        ship.anims.play('throttle', true);
+        moving = true;
+       
+       }
+       stopThrottle (event) {
+       
+        
+        ship.anims.stop();
+      
+        moving = false;
+        ship.setFrame(0);
+            
+       
+       }
+       turn_up (event) {
+
+      
+        turning_up=true;
+        
+   
+   }
+   turn_down (event) {
+
+   
+    turning_down=true;
+    
+
+}
+   turning_off_up(event)
+   {
+  
+      
+       turning_up = false;
+       
+   }
+   turning_off_down(event)
+   {
+   
+      
+       turning_down = false;
+   }
+    update(){
+
+  
+        if(this.counter>0)
+        {
+        this.text.setText([
+            "Hold W - " + this.counter
+        ]);
+        return;
+    }
+    if(transitioning){
+       
+        return;
+    }
+    if(ship.body.x >= game.config.width)
+    {
+       
+        
+        
+        game_scene.scene.start('Playgame_1');
+
+    }
+    else if (ship.body.x<=0-ship.body.width)
+    {
+       if(transitioning == false)
+       transitioning =  true;
+       else
+       return;
+        win = false;
+        var c = 0;
+        ship.body.velocity.y = 0;
+        ship.body.velocity.x = 0;
+        ship.body.gravity = 0;
+        ship.body.reset(-15, ship.body.y);
+        
+        
+        var inter = setInterval(function(){
+           
+           ship.body.updateFromGameObject();
+           
+           if(ship.body.x<-100)
+           {
+     
+           }
+           else
+           {
+            c++; 
+          
+            ship.body.velocity.x = 10;
+            ship.body.velocity.y = 10;
+
+            
+            ship.angle+=7;
+            ship.setScale(1-(c/100));
+            if(c==100)
+        {
+            
+            clearInterval(inter)
+            
+            
+            game_scene.scene.start('Highscore');
+        }}}, 50);
+       
+        
+    }
+
+
+
+    
+    ship.body.gravity = new Phaser.Geom.Point(planet.body.x - ship.body.x, planet.body.y - ship.body.y);
+ 
+    ship.body.velocity.x =-(this.maxDistanceX +ship.body.gravity.x)
+    let oldVelocityY = ship.body.velocity.y;
+    let newVelocityY = ship.body.gravity.y >0 ? (this.maxDistanceY - ship.body.gravity.y)/1.2 : -((this.maxDistanceY - Math.abs(ship.body.gravity.y))/1.2);
+    if((oldVelocityY >0 && newVelocityY < 0) || (oldVelocityY <0 && newVelocityY >0))ship.body.velocity.y = 0;
+    else
+    ship.body.velocity.y = newVelocityY;
+
+    ship.body.velocity.y/=y_divisor;
+    ship.body.velocity.x/=x_divisor;
+
+  
+        if(turning_up){
+        
+        ship.angle-=1;
+        }
+        if(turning_down){
+           ship.angle+=1;
+        }
+        if(moving)
+        {
+            currentFuel-=1;
+            ship.body.velocity.x += Math.cos(ship.angle*Math.PI/180)*power;
+            if(ship.body.y+ship.body.height <game.config.height && ship.body.y >0)
+            ship.body.velocity.y += Math.sin(ship.angle*Math.PI/180)*power;
+        }
+        else{
+            ship.body.velocity.x += 0;
+            ship.body.velocity.y += 0;
+        }
+
+      
+    
+
+      
+ 
+   
+  
+        
+       
+    
+    
+
+}
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+class Playgame_1 extends Phaser.Scene{
+    
+
+    constructor(){
+        
+        super("Playgame_1");
+        game_scene_1 = this;
+        this.maxDistanceX = game.config.width;
+        this.maxDistanceY = game.config.height/2;
+        this.counter = 3;
+        this.text;
+        this.timer;
+        transitioning = false;
+
+        
+        
+
+        
+
+    }
+    preload(){
+        
+        this.load.bitmapFont('atari', 'assets/atari-smooth.png', 'assets/atari-smooth.xml');
+        this.cameras.main.setBackgroundColor('#000000')
+        
+        this.load.image('planet', 'assets/planet.png');
+        this.load.image('mars_art', 'assets/mars.jpg');
+
+
+        this.load.spritesheet('ship', 
+    'assets/spaceship.png',
+    { frameWidth: 30, frameHeight: 30 }
+);
+
+    }
+    create(){
+        this.add.image(0, 0, 'mars_art').setOrigin(0).setScale(1);
+        let game_music_config = 
+        {
+            mute: false,
+            volume: 1,
+            rate: 1,
+            detune: 0,
+            seek: 0,
+            loop: true,
+            delay: 0
+        }
+
+        
+        var element = this.add.dom(game.config.width-50, game.config.height-50).createFromCache('button');
+        if(m)
+        {
+          
+        $("#mute").css({"background": "url('../assets/mute.png')"});
+
+        }
+        else
+        {
+        $("#mute").css({"background": "url('../assets/unmute.png')"});
+        }
+
+       
+        $("#mute").click(function(){
+            console.log("clicked")
+            if(m){
+                m= false;
+                global_music.stop();
+            $("#mute").css({"background": "url('../assets/unmute.png')"});
+            }
+            else{
+                m=true;
+                global_music.play();
+                $("#mute").css({"background": "url('../assets/mute.png')"});
+            }
+    
+        });
+    
+        
+     
+ 
+    this.text = this.add.bitmapText(400, 200, 'atari', '', 38).setOrigin(0.5).setCenterAlign().setInteractive();
+
+    this.text.setText([
+        "Hold W - " + this.counter
+    ]);
+       
+        
+    this.timer = this.time.addEvent({
+        delay: 1000,                // ms
+        callback: function(){
+            this.counter--;
+            if (this.counter==0){this.timer.remove();
+            this.text.setText([
+                ""
+            ]);}
+        },
+        //args: [],
+        callbackScope: this,
+        loop: true
+    });
+        
+    this.input.keyboard.on('keydown_A', this.turn_up, this);
+    this.input.keyboard.on('keyup_A', this.turning_off_up, this);
+    this.input.keyboard.on('keydown_D', this.turn_down, this);
+    this.input.keyboard.on('keyup_D', this.turning_off_down, this);
+    this.input.keyboard.on('keydown_W', this.throttle, this);
+    this.input.keyboard.on('keyup_W', this.stopThrottle, this);
+    // cursors = this.input.keyboard.createCursorKeys();
+    planet = this.physics.add.sprite(0, game.config.height/2, 'planet');
+    planet.setVisible(false);
+    ship = this.physics.add.sprite(game.config.width/7+10,game.config.height/5+70, 'ship');
+    
+    
+  
+    ship.body.allowGravity = false;
+    this.anims.create({
+        key: 'throttle',
+        frames: this.anims.generateFrameNumbers('ship', { start: 0, end: 4}),
+        frameRate: 10,
+        repeat: -1
+    });
+    // this.anims.create({
+    //     key: 'noThrottle',
+    //     frames: this.anims.generateFrameNumbers('ship', { start: 0, end: 0 }),
+    //     frameRate: 10,
+    //     repeat: -1
+    // });
+
+    }
+
+
+   throttle (event) {
+
+
+  
+        ship.anims.play('throttle', true);
+        moving = true;
+       
+       }
+       stopThrottle (event) {
+        
+        ship.anims.stop();
+      
+        moving = false;
+        ship.setFrame(0);
+            
+       
+       }
+       turn_up (event) {
+
+
+        turning_up=true;
+        
+   
+   }
+   turn_down (event) {
+
+
+    turning_down=true;
+    
+
+}
+   turning_off_up(event)
+   {
+
+    
+       turning_up = false;
+       
+   }
+   turning_off_down(event)
+   {
+
+    
+       turning_down = false;
+   }
+    update(){
+
+        if(this.counter>0)
+        {
+        this.text.setText([
+            "Hold W - " + this.counter
+        ]);
+        return;
+    }
+    if(transitioning){
+       
+        return;
+    }
+    
+    if(ship.body.x >= game.config.width)
+    {
+       
+       
+        
+        game_scene_1.scene.start('Playgame_2');
+
+    }
+    else if (ship.body.x<=0-ship.body.width)
+    {
+       
+        if(transitioning == false)
+       transitioning =  true;
+       else
+       return;
+        win = false;
+        var c = 0;
+        ship.body.velocity.y = 0;
+        ship.body.velocity.x = 0;
+        ship.body.gravity = 0;
+        ship.body.reset(-15, ship.body.y);
+        
+        
+        var inter = setInterval(function(){
+           
+           ship.body.updateFromGameObject();
+           
+           if(ship.body.x<-100)
+           {
+     
+           }
+           else
+           {
+            c++; 
+          
+            ship.body.velocity.x = 10;
+            ship.body.velocity.y = 10;
+
+            
+            ship.angle+=7;
+            ship.setScale(1-(c/100));
+            if(c==100)
+        {
+            
+            clearInterval(inter)
+            
+            
+            game_scene.scene.start('Highscore');
+        }}}, 50);
+    }
+
+
+
+
+    ship.body.gravity = new Phaser.Geom.Point(planet.body.x - ship.body.x, planet.body.y - ship.body.y);
+ 
+    ship.body.velocity.x =-(this.maxDistanceX +ship.body.gravity.x)
+    let oldVelocityY = ship.body.velocity.y;
+    let newVelocityY = ship.body.gravity.y >0 ? (this.maxDistanceY - ship.body.gravity.y)/1.2 : -((this.maxDistanceY - Math.abs(ship.body.gravity.y))/1.2);
+    if((oldVelocityY >0 && newVelocityY < 0) || (oldVelocityY <0 && newVelocityY >0))ship.body.velocity.y = 0;
+    else
+    ship.body.velocity.y = newVelocityY;
+
+    ship.body.velocity.y/=y_divisor;
+    ship.body.velocity.x/=x_divisor;
+
+  
+        if(turning_up){
+        
+        ship.angle-=1;
+        }
+        if(turning_down){
+           ship.angle+=1;
+        }
+        if(moving)
+        {
+            currentFuel-=1;
+            ship.body.velocity.x += Math.cos(ship.angle*Math.PI/180)*power;
+            if(ship.body.y+ship.body.height <game.config.height && ship.body.y >0)
+            ship.body.velocity.y += Math.sin(ship.angle*Math.PI/180)*power;
+        }
+        else{
+            ship.body.velocity.x += 0;
+            ship.body.velocity.y += 0;
+        }
+
+      
+    
+
+      
+ 
+   
+  
+        
+       
+    
+    
+
+}
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class Playgame_2 extends Phaser.Scene{
+    
+
+    constructor(){
+        
+        super("Playgame_2");
+        game_scene_2 = this;
+        this.maxDistanceX = game.config.width;
+        this.maxDistanceY = game.config.height/2;
+        this.counter = 3;
+        this.text;
+        this.timer;
+        transitioning = false;
+
+
+        
+
+        
+
+    }
+    preload(){
+        
+        this.load.bitmapFont('atari', 'assets/atari-smooth.png', 'assets/atari-smooth.xml');
+        this.cameras.main.setBackgroundColor('#000000')
+        
+        this.load.image('planet', 'assets/planet.png');
+        this.load.image('jupiter_art', 'assets/jupiter.jpg');
+
+        this.load.spritesheet('ship', 
+    'assets/spaceship.png',
+    { frameWidth: 30, frameHeight: 30 }
+);
+
+    }
+    create(){
+        this.add.image(0, 0, 'jupiter_art').setOrigin(0).setScale(1);
+        let game_music_config = 
+        {
+            mute: false,
+            volume: 1,
+            rate: 1,
+            detune: 0,
+            seek: 0,
+            loop: true,
+            delay: 0
+        }
+
+        
+        var element = this.add.dom(game.config.width-50, game.config.height-50).createFromCache('button');
+        if(m)
+        {
+           
+        $("#mute").css({"background": "url('../assets/mute.png')"});
+
+        }
+        else
+        {
+        $("#mute").css({"background": "url('../assets/unmute.png')"});
+        }
+
+       
+        $("#mute").click(function(){
+            console.log("clicked")
+            if(m){
+                m= false;
+                global_music.stop();
+            $("#mute").css({"background": "url('../assets/unmute.png')"});
+            }
+            else{
+                m=true;
+                global_music.play();
+                $("#mute").css({"background": "url('../assets/mute.png')"});
+            }
+    
+        });
+    
+        
+       
+ 
+    this.text = this.add.bitmapText(400, 200, 'atari', '', 38).setOrigin(0.5).setCenterAlign().setInteractive();
+
+    this.text.setText([
+        "Hold W - " + this.counter
+    ]);
+       
+        
+    this.timer = this.time.addEvent({
+        delay: 1000,                // ms
+        callback: function(){
+            this.counter--;
+            if (this.counter==0){this.timer.remove();
+            this.text.setText([
+                ""
+            ]);}
+        },
+        //args: [],
+        callbackScope: this,
+        loop: true
+    });
+        
+    this.input.keyboard.on('keydown_A', this.turn_up, this);
+    this.input.keyboard.on('keyup_A', this.turning_off_up, this);
+    this.input.keyboard.on('keydown_D', this.turn_down, this);
+    this.input.keyboard.on('keyup_D', this.turning_off_down, this);
+    this.input.keyboard.on('keydown_W', this.throttle, this);
+    this.input.keyboard.on('keyup_W', this.stopThrottle, this);
+    // cursors = this.input.keyboard.createCursorKeys();
+    planet = this.physics.add.sprite(0, game.config.height/2, 'planet');
+    planet.setVisible(false);
+    ship = this.physics.add.sprite(game.config.width/7+10,game.config.height/5+70, 'ship');
+    
+    
+  
+    ship.body.allowGravity = false;
+    this.anims.create({
+        key: 'throttle',
+        frames: this.anims.generateFrameNumbers('ship', { start: 0, end: 4}),
+        frameRate: 10,
+        repeat: -1
+    });
+    // this.anims.create({
+    //     key: 'noThrottle',
+    //     frames: this.anims.generateFrameNumbers('ship', { start: 0, end: 0 }),
+    //     frameRate: 10,
+    //     repeat: -1
+    // });
+
+    }
+
+
+   throttle (event) {
+
+
+    
         ship.anims.play('throttle', true);
         moving = true;
        
@@ -261,54 +935,95 @@ class Playgame extends Phaser.Scene{
        }
        turn_up (event) {
 
-        
+
         turning_up=true;
         
    
    }
    turn_down (event) {
 
-        
+
     turning_down=true;
     
 
 }
    turning_off_up(event)
    {
-      
+
+    
        turning_up = false;
        
    }
    turning_off_down(event)
    {
-      
-      
+
+    
        turning_down = false;
    }
     update(){
 
-      
+  
         if(this.counter>0)
         {
         this.text.setText([
-            "Hold Space - " + this.counter
+            "Hold W - " + this.counter
         ]);
         return;
     }
+    if(transitioning){
+       
+        return;
+    }
+    
     if(ship.body.x >= game.config.width)
     {
        
-        win = true;
+    
         
-        game_scene.scene.start('Highscore');
+        game_scene_2.scene.start('Playgame_3');
 
     }
-    else if (ship.body.x<=0)
+    else if (ship.body.x<=0-ship.body.width)
     {
        
+        if(transitioning == false)
+       transitioning =  true;
+       else
+       return;
         win = false;
-       
-        game_scene.scene.start('Highscore');
+        var c = 0;
+        ship.body.velocity.y = 0;
+        ship.body.velocity.x = 0;
+        ship.body.gravity = 0;
+        ship.body.reset(-15, ship.body.y);
+        
+        
+        var inter = setInterval(function(){
+           
+           ship.body.updateFromGameObject();
+           
+           if(ship.body.x<-100)
+           {
+     
+           }
+           else
+           {
+            c++; 
+          
+            ship.body.velocity.x = 10;
+            ship.body.velocity.y = 10;
+
+            
+            ship.angle+=7;
+            ship.setScale(1-(c/100));
+            if(c==100)
+        {
+            
+            clearInterval(inter)
+            
+            
+            game_scene.scene.start('Highscore');
+        }}}, 50);
     }
 
 
@@ -323,8 +1038,295 @@ class Playgame extends Phaser.Scene{
     else
     ship.body.velocity.y = newVelocityY;
 
-    ship.body.velocity.y/=5;
-    ship.body.velocity.x/=5;
+    ship.body.velocity.y/=y_divisor;
+    ship.body.velocity.x/=x_divisor;
+
+  
+        if(turning_up){
+        
+        ship.angle-=1;
+        }
+        if(turning_down){
+           ship.angle+=1;
+        }
+        if(moving)
+        {
+            currentFuel-=1;
+            ship.body.velocity.x += Math.cos(ship.angle*Math.PI/180)*power;
+            if(ship.body.y+ship.body.height <game.config.height && ship.body.y >0)
+            ship.body.velocity.y += Math.sin(ship.angle*Math.PI/180)*power;
+        }
+        else{
+            ship.body.velocity.x += 0;
+            ship.body.velocity.y += 0;
+        }
+      
+    
+    
+
+}
+
+
+
+
+
+}
+
+
+class Playgame_3 extends Phaser.Scene{
+    
+
+    constructor(){
+        
+        super("Playgame_3");
+        game_scene_3 = this;
+        this.maxDistanceX = game.config.width;
+        this.maxDistanceY = game.config.height/2;
+        this.counter = 3;
+        this.text;
+        this.timer;
+        transitioning = false;
+
+
+        
+
+        
+
+    }
+    preload(){
+        
+        this.load.bitmapFont('atari', 'assets/atari-smooth.png', 'assets/atari-smooth.xml');
+        this.cameras.main.setBackgroundColor('#000000')
+        
+        this.load.image('planet', 'assets/planet.png');
+        this.load.image('saturn_art', 'assets/saturn.jpg');
+        
+
+        this.load.spritesheet('ship', 
+    'assets/spaceship.png',
+    { frameWidth: 30, frameHeight: 30 }
+);
+
+    }
+    create(){
+        this.add.image(0, 0, 'saturn_art').setOrigin(0).setScale(1);
+        let game_music_config = 
+        {
+            mute: false,
+            volume: 1,
+            rate: 1,
+            detune: 0,
+            seek: 0,
+            loop: true,
+            delay: 0
+        }
+
+        
+        var element = this.add.dom(game.config.width-50, game.config.height-50).createFromCache('button');
+        if(m)
+        {
+        
+        $("#mute").css({"background": "url('../assets/mute.png')"});
+
+        }
+        else
+        {
+        $("#mute").css({"background": "url('../assets/unmute.png')"});
+        }
+
+       
+        $("#mute").click(function(){
+            console.log("clicked")
+            if(m){
+                m= false;
+                global_music.stop();
+            $("#mute").css({"background": "url('../assets/unmute.png')"});
+            }
+            else{
+                m=true;
+                global_music.play();
+                $("#mute").css({"background": "url('../assets/mute.png')"});
+            }
+    
+        });
+    
+        
+        
+ 
+    this.text = this.add.bitmapText(400, 200, 'atari', '', 38).setOrigin(0.5).setCenterAlign().setInteractive();
+
+    this.text.setText([
+        "Hold W - " + this.counter
+    ]);
+       
+        
+    this.timer = this.time.addEvent({
+        delay: 1000,                // ms
+        callback: function(){
+            this.counter--;
+            if (this.counter==0){this.timer.remove();
+            this.text.setText([
+                ""
+            ]);}
+        },
+        //args: [],
+        callbackScope: this,
+        loop: true
+    });
+        
+    this.input.keyboard.on('keydown_A', this.turn_up, this);
+    this.input.keyboard.on('keyup_A', this.turning_off_up, this);
+    this.input.keyboard.on('keydown_D', this.turn_down, this);
+    this.input.keyboard.on('keyup_D', this.turning_off_down, this);
+    this.input.keyboard.on('keydown_W', this.throttle, this);
+    this.input.keyboard.on('keyup_W', this.stopThrottle, this);
+    // cursors = this.input.keyboard.createCursorKeys();
+    planet = this.physics.add.sprite(0, game.config.height/2, 'planet');
+    planet.setVisible(false);
+    ship = this.physics.add.sprite(game.config.width/7+10,game.config.height/5+70, 'ship');
+    
+    
+  
+    ship.body.allowGravity = false;
+    this.anims.create({
+        key: 'throttle',
+        frames: this.anims.generateFrameNumbers('ship', { start: 0, end: 4}),
+        frameRate: 10,
+        repeat: -1
+    });
+    // this.anims.create({
+    //     key: 'noThrottle',
+    //     frames: this.anims.generateFrameNumbers('ship', { start: 0, end: 0 }),
+    //     frameRate: 10,
+    //     repeat: -1
+    // });
+
+    }
+
+
+   throttle (event) {
+
+
+    
+        ship.anims.play('throttle', true);
+        moving = true;
+       
+       }
+       stopThrottle (event) {
+
+        
+        ship.anims.stop();
+      
+        moving = false;
+        ship.setFrame(0);
+            
+       
+       }
+       turn_up (event) {
+
+
+        turning_up=true;
+        
+   
+   }
+   turn_down (event) {
+
+
+    turning_down=true;
+    
+
+}
+   turning_off_up(event)
+   {
+
+    
+       turning_up = false;
+       
+   }
+   turning_off_down(event)
+   {
+
+    
+       turning_down = false;
+   }
+    update(){
+
+        if(this.counter>0)
+        {
+        this.text.setText([
+            "Hold W - " + this.counter
+        ]);
+        return;
+    }
+    if(transitioning){
+       
+        return;
+    }
+    if(ship.body.x >= game.config.width)
+    {
+       
+        win = true;
+        
+        game_scene_3.scene.start('Highscore');
+
+    }
+    else if (ship.body.x<=0-ship.body.width)
+    {
+       
+        if(transitioning == false)
+        transitioning =  true;
+        else
+        return;
+         win = false;
+         var c = 0;
+         ship.body.velocity.y = 0;
+         ship.body.velocity.x = 0;
+         ship.body.gravity = 0;
+         ship.body.reset(-15, ship.body.y);
+         
+         
+         var inter = setInterval(function(){
+            
+            ship.body.updateFromGameObject();
+            
+            if(ship.body.x<-100)
+            {
+      
+            }
+            else
+            {
+             c++; 
+           
+             ship.body.velocity.x = 10;
+             ship.body.velocity.y = 10;
+ 
+             
+             ship.angle+=7;
+             ship.setScale(1-(c/100));
+             if(c==100)
+         {
+             
+             clearInterval(inter)
+             
+             
+             game_scene.scene.start('Highscore');
+         }}}, 50);
+    }
+
+
+
+
+    ship.body.gravity = new Phaser.Geom.Point(planet.body.x - ship.body.x, planet.body.y - ship.body.y);
+ 
+    ship.body.velocity.x =-(this.maxDistanceX +ship.body.gravity.x)
+    let oldVelocityY = ship.body.velocity.y;
+    let newVelocityY = ship.body.gravity.y >0 ? (this.maxDistanceY - ship.body.gravity.y)/1.2 : -((this.maxDistanceY - Math.abs(ship.body.gravity.y))/1.2);
+    if((oldVelocityY >0 && newVelocityY < 0) || (oldVelocityY <0 && newVelocityY >0))ship.body.velocity.y = 0;
+    else
+    ship.body.velocity.y = newVelocityY;
+
+    ship.body.velocity.y/=y_divisor;
+    ship.body.velocity.x/=x_divisor;
 
   
         if(turning_up){
@@ -380,6 +1382,18 @@ class Playgame extends Phaser.Scene{
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 //change the string of localStorageName to reset highscore
 
 
@@ -410,7 +1424,7 @@ class Highscore extends Phaser.Scene {
 		
     preload()
     {
-        this.load.image('arrows', 'assets/arrows.png');
+        this.load.image('highscore_art', 'assets/highscores.jpg');
         this.load.bitmapFont('atari', 'assets/atari-smooth.png', 'assets/atari-smooth.xml');
         this.load.html('nameform', 'assets/nameform.html');
     }
@@ -423,7 +1437,7 @@ class Highscore extends Phaser.Scene {
         
     }
 	create() {
-        
+        this.add.image(0, 0, 'highscore_art').setOrigin(0).setScale(1);
         this.text = this.add.bitmapText(100, 50, 'atari', '', 38);
 		this.cameras.main.setBackgroundColor('#000000')
 		this.input.on('pointerdown', this.changeScene);
@@ -473,30 +1487,7 @@ class Highscore extends Phaser.Scene {
 
                             
                         });
-                        // $.ajax({
-                        //     type: "POST",
-                        //     url: NEW_URL,
-                        //     data: {username: inputText.value, score: currentFuel.toString()},
-                        //     success: function(result)
-                        //     {
-                        //         element.setVisible(false)
-
-                        //         $.ajax({url: HS_URL, success: function(result){
-                        //             HS = JSON.parse(result);
-                        //             this.highscores = HS;
-                        //             element.setVisible(false)
-                        //             this.showHighscore(0)
-                        //             win = false;
-                                    
-                        //           }});
-
-
-                                
-                        //     }
-                        //   });
-
                         
-
                     }
 
 
