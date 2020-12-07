@@ -14,16 +14,17 @@ let HS;
 let HS_URL = public_URL + "highscores";
 let NEW_URL = public_URL + "newscore";
 let win = false;
-let currentScene = 0;
+
 let menu_scene;
 let game_scene;
 let highscore_scene;
 let start_fuel = 10000;
 let data_entered = false;
-let music = false;;
+let m = false;;
 
 window.onload = function() {
   
+    
     $.ajax({url: HS_URL, success: function(result){
         HS = JSON.parse(result);
       }});
@@ -46,6 +47,9 @@ window.onload = function() {
         pixelArt: true,
         physics: {
             default: "arcade"
+        },
+        audio: {
+            disableWebAudio: true
         }
       
     }
@@ -69,9 +73,8 @@ class Menu extends Phaser.Scene {
 		
     preload()
     {
-        this.load.audio("menu_music", "assets/menu.mp3",{
-            instances: 1
-        });
+        this.load.html('button', 'assets/audio.html');
+        this.load.audio("menu_music", ["assets/menu.mp3"]);
         this.load.image('arrows', 'assets/arrows.png');
         this.load.bitmapFont('atari', 'assets/atari-smooth.png', 'assets/atari-smooth.xml');
 
@@ -88,14 +91,30 @@ class Menu extends Phaser.Scene {
             loop: true,
             delay: 0
         }
-        // this.sound.on('decoded', 'menu_music');
-        // this.sound.decodeAudio("menu_music");
-        // game.sound.context.resume().resolve('Success').then(function(value){
-        //     console.log("function resolved");
-        //     this.sound.add('menu_music');
-        // this.sound.play('menu_music');})
-       
+    
         
+        // music = game.sound.context.resume();
+        // console.log(p)
+        // p.then(play_music,play_music);
+        // console.log("hllo")
+        var music = game.sound.add('menu_music', menu_config);
+        var element = this.add.dom(game.config.width-50, game.config.height-50).createFromCache('button');
+        $("button").css({"background": "url('../assets/unmute.png')"});
+       
+        $("button").click(function(){
+            console.log("clicked")
+            if(m){
+                m= false;
+            music.stop();
+            $("button").css({"background": "url('../assets/unmute.png')"});
+            }
+            else{
+                m=true;
+                music.play();
+                $("button").css({"background": "url('../assets/mute.png')"});
+            }
+    
+        });
     
         
 		this.cameras.main.setBackgroundColor('#000000')
@@ -107,8 +126,7 @@ class Menu extends Phaser.Scene {
         this.input.on('pointerdown', function(pointer)
         {
             
-            currentScene++;
-          music = false;
+         
             menu_scene.scene.start("Playgame");
 
         });
@@ -120,6 +138,7 @@ class Menu extends Phaser.Scene {
 }
    
 	update(){
+        
         // if(music == false){
         //     console.log("playing")
         
@@ -268,7 +287,7 @@ class Playgame extends Phaser.Scene{
    }
     update(){
 
-        if(currentScene!=1)return;
+      
         if(this.counter>0)
         {
         this.text.setText([
@@ -280,7 +299,7 @@ class Playgame extends Phaser.Scene{
     {
        
         win = true;
-        currentScene++;
+        
         game_scene.scene.start('Highscore');
 
     }
@@ -288,7 +307,7 @@ class Playgame extends Phaser.Scene{
     {
        
         win = false;
-        currentScene++;
+       
         game_scene.scene.start('Highscore');
     }
 
@@ -398,7 +417,7 @@ class Highscore extends Phaser.Scene {
     changeScene(pointer)
     {
         if(data_entered==false)return;
-        currentScene=0;
+      
        
         highscore_scene.scene.start('Menu')
         
@@ -501,7 +520,7 @@ class Highscore extends Phaser.Scene {
 }
    
 	update(){
-        if(currentScene!=2)return;
+      
         //console.log("hello")
         //this.showHighscore();
 		
