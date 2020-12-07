@@ -33,7 +33,7 @@ app.use(express.urlencoded({
 
 app.get('/', function (req, res) {
    
-  console.log("hello")
+  
   res.sendFile(__dirname + '/_index.html');
   
   

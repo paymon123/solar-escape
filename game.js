@@ -34,7 +34,9 @@ window.onload = function() {
   
     
     $.ajax({url: HS_URL, success: function(result){
+        
         HS = JSON.parse(result);
+        console.log("got highscores" + HS)
       }});
 
 
