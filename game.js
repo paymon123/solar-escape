@@ -1271,7 +1271,7 @@ class Playgame_3 extends Phaser.Scene{
        
         win = true;
         this.stopThrottle();
-        game_scene_3.scene.start('Highscore');
+        game_scene_3.scene.start('Menu');
 
     }
     else if (ship.body.x<=0-ship.body.width)
