@@ -1541,7 +1541,8 @@ class Highscore extends Phaser.Scene {
       }
 	
 	showHighscore(page) {
-        
+        this.highscores = HS
+        console.log("show highscores" + this,highscores)
         this.highscores = this.highscores.sort(this.compare)
    
         let lineLength = 15;
