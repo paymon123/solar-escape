@@ -6,9 +6,9 @@ const { Client } = require('pg');
 //const game = require("./game")
 
 let DB_URI = 
-  process.env.DATABASE_URL  
+   process.env.DATABASE_URL  
 //  | 
-//  "postgresql://localhost:5432/bankly?user=postgres&password=postgres";
+ //"postgresql://localhost:5432/bankly?user=postgres&password=postgres";
 
 const db = new Client({
   connectionString: DB_URI
@@ -87,7 +87,7 @@ console.log(score)
 
 
 });
-app.listen(process.env.PORT || 5000, function () {
+app.listen(process.env.PORT || 3000, function () {
   
   
   

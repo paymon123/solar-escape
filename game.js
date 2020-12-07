@@ -1,6 +1,6 @@
 
 let public_URL = "https://solar-escape.herokuapp.com/";
-let testing_multiplier = 10;
+let testing_multiplier = 1;
 let power = 175 * testing_multiplier;
 let game;
 let turning_up = false;
@@ -10,25 +10,34 @@ let ship;
 let cursors;
 let spaceKey;
 let moving = false;
-let currentFuel = 10000;
+
 let HS;
 let HS_URL = public_URL + "highscores";
 let NEW_URL = public_URL + "newscore";
 let win = false;
-
+let exploding = false;
+function getRandomInt(max) {
+    let  v = Math.floor(Math.random() * Math.floor(max));
+   
+    return v;
+  }
+  let battery;
 let menu_scene;
 let game_scene;
 let game_scene_1;
 let game_scene_2;
 let game_scene_3;
 let highscore_scene;
-let start_fuel = 10000;
+let start_fuel = 5000;
+let currentFuel = start_fuel;
 let data_entered = false;
 let m = false;
 let global_music;
-let x_divisor = 4;
-let y_divisor = 4;
+let x_divisor = 5;
+let y_divisor = 5;
 let transitioning = false;
+let collision_enemies = [];
+let collision_positive = [];
 let newGame = function (){
     let public_URL = "https://solar-escape.herokuapp.com/";
 testing_multiplier = 10;
@@ -41,7 +50,7 @@ ship;
 cursors;
 spaceKey;
 moving = false;
-currentFuel = 10000;
+currentFuel = start_fuel;
 HS;
 HS_URL = public_URL + "highscores";
 NEW_URL = public_URL + "newscore";
@@ -53,13 +62,14 @@ game_scene_1;
 game_scene_2;
 game_scene_3;
 highscore_scene;
-start_fuel = 10000;
+
 data_entered = false;
 m = false;
 global_music;
 x_divisor = 4;
 y_divisor = 4;
 transitioning = false;
+exploding = false;
     
     game.destroy();
     $( "#thegame" ).empty();
@@ -136,7 +146,55 @@ window.onload = function() {
     
     
 }
+let spawn_enemies = function(scene, density, speed)
+   {
+       collision_enemies = [];
+       let y_row = 0;
+       for(let i = 0; i<100; i++)
+       {
+           let x_row = getRandomInt(600)+200
+           let rand = getRandomInt(5);
+           let key = "satellite"
+           if(rand==3) {y_row+=60;key = "debris_1"}
+           else if(rand==4) {y_row+=100;key = "debris_2"}
+           else{
+               y_row+=50;
+            key = "satellite";
 
+           }
+           y_row+=getRandomInt(i*1000*density);
+       let enemy = (scene.physics.add.sprite(x_row, y_row, key));
+       let s = getRandomInt(3)+1;
+       enemy.speed = s*speed
+       collision_enemies.push(enemy);
+       }
+
+   }
+
+   let spawn_asteroids = function(scene, density, speed)
+   {
+       collision_enemies = [];
+       let y_row = 0;
+       for(let i = 0; i<100; i++)
+       {
+           let x_row = getRandomInt(600)+200
+           let rand = getRandomInt(5);
+           let key = "satellite"
+           if(rand==3) {y_row+=60;key = "debris_1"}
+           else if(rand==4) {y_row+=100;key = "debris_2"}
+           else{
+               y_row+=50;
+            key = "satellite";
+
+           }
+           y_row+=getRandomInt(i*1000*density);
+       let enemy = (scene.physics.add.sprite(x_row, y_row, key));
+       let s = getRandomInt(3)+1;
+       enemy.speed = s*speed
+       collision_enemies.push(enemy);
+       }
+
+   }
 class Menu extends Phaser.Scene {
 	
 	constructor() {
@@ -160,7 +218,8 @@ class Menu extends Phaser.Scene {
     }
    
 	create() {
-        
+        transitioning = false;
+        exploding = false;
         win = false;
         currentFuel = start_fuel;
         let menu_config = 
@@ -251,6 +310,7 @@ class Playgame extends Phaser.Scene{
         this.text;
         this.timer;
         transitioning = false;
+        exploding = false;
 
         
 
@@ -269,13 +329,25 @@ class Playgame extends Phaser.Scene{
     'assets/spaceship.png',
     { frameWidth: 30, frameHeight: 30 }
 );
+this.load.spritesheet('battery', 
+'assets/battery.png',
+{ frameWidth: 95, frameHeight: 49 }
+);
+        this.load.image('satellite', 'assets/satellite.png')
+        this.load.image('debris_1', 'assets/debris_1.png')
+        this.load.image('debris_2', 'assets/debris_2.png')
 
     }
 
 
     create(){
-        console.log("playgame create called")
+        transitioning = false;
+        exploding = false;
+        
+
         this.add.image(0, 0, 'earth_art').setOrigin(0).setScale(1);
+
+        
         let game_music_config = 
         {
             mute: false,
@@ -319,12 +391,7 @@ class Playgame extends Phaser.Scene{
         
       
  
-    this.text = this.add.bitmapText(400, 200, 'atari', '', 38).setOrigin(0.5).setCenterAlign().setInteractive();
-
-    this.text.setText([
-        "Hold W - " + this.counter
-    ]);
-       
+    
         
     this.timer = this.time.addEvent({
         delay: 1000,                // ms
@@ -351,7 +418,7 @@ class Playgame extends Phaser.Scene{
     planet.setVisible(false);
     
     ship = this.physics.add.sprite(game.config.width/7+10,game.config.height/5+70, 'ship');
-    
+    battery = this.physics.add.sprite(game.config.width-60,30, 'battery');
     
   
     ship.body.allowGravity = false;
@@ -361,27 +428,53 @@ class Playgame extends Phaser.Scene{
         frameRate: 10,
         repeat: -1
     });
-    // this.anims.create({
-    //     key: 'noThrottle',
-    //     frames: this.anims.generateFrameNumbers('ship', { start: 0, end: 0 }),
-    //     frameRate: 10,
-    //     repeat: -1
-    // });
+    this.anims.create({
+        key: 'explode',
+        frames: this.anims.generateFrameNumbers('ship', { start: 5, end: 8}),
+        frameRate: 5,
+        repeat: -1
+    });
+    
+ 
+ 
+    let explode = function()
+    {
+      
+        if(exploding == false)
+        exploding = true;
+        else return;
+        
+        ship.anims.stop();
+        ship.anims.play('explode',true);
+        
+     
+    }
+   
+   spawn_enemies(this, 1,0.1);
+   
 
+
+        this.physics.add.overlap(ship, collision_enemies, explode, null, this);
+        this.text = this.add.bitmapText(400, 200, 'atari', '', 38).setOrigin(0.5).setCenterAlign().setInteractive();
+
+        this.text.setText([
+            "Hold W - " + this.counter
+        ]);
+           
     }
 
 
    throttle (event) {
 
     
-  
+    if(exploding)return;
         ship.anims.play('throttle', true);
         moving = true;
        
        }
        stopThrottle (event) {
        
-        
+        if(exploding)return;
         ship.anims.stop();
       
         moving = false;
@@ -417,8 +510,48 @@ class Playgame extends Phaser.Scene{
        turning_down = false;
    }
     update(){
+        
+        if(currentFuel < (start_fuel/5))
+        battery.setFrame(0);
+        else if(currentFuel < (start_fuel/5)*2)
+        battery.setFrame(1);
+        else if(currentFuel < (start_fuel/5)*3)
+        battery.setFrame(2);
+        else if(currentFuel < (start_fuel/5)*4)
+        battery.setFrame(4);
+        else if(currentFuel < (start_fuel/5)*5)
+        battery.setFrame(4);
+        if(ship.anims.currentFrame!=null && exploding){
+     
+            ship.anims.play('explode',true);
+        if(ship.anims.currentFrame.index === 4 && exploding){
+            console.log("frame 8")
+            win = false;
+            game_scene.scene.start('Highscore');
+        }
+    }
+        collision_enemies.forEach(function (child) {
+            
+            let from_center = Math.abs(child.body.y-200)+100;
+            child.body.velocity.y = -(child.speed)*(from_center);
+            
 
-  
+            child.angle+=child.speed;
+        
+        });
+        if(exploding)
+    {
+        ship.body.velocity.x = 0;
+        ship.body.velocity.y = 0;
+        return;
+    }
+    if(currentFuel<=0){
+        if(exploding == false)
+        exploding = true;
+        else return;
+        
+        ship.anims.stop();
+        ship.anims.play('explode',true);}
         if(this.counter>0)
         {
         this.text.setText([
@@ -426,10 +559,13 @@ class Playgame extends Phaser.Scene{
         ]);
         return;
     }
+
+   
     if(transitioning){
        
         return;
     }
+    
     if(ship.body.x >= game.config.width)
     {
        
@@ -562,6 +698,8 @@ class Playgame_1 extends Phaser.Scene{
         this.text;
         this.timer;
         transitioning = false;
+        exploding = false;
+       
 
         
         
@@ -573,9 +711,15 @@ class Playgame_1 extends Phaser.Scene{
         
         this.load.bitmapFont('atari', 'assets/atari-smooth.png', 'assets/atari-smooth.xml');
         this.cameras.main.setBackgroundColor('#000000')
-        
+        this.load.spritesheet('battery', 
+'assets/battery.png',
+{ frameWidth: 95, frameHeight: 49 }
+);
         this.load.image('planet', 'assets/planet.png');
         this.load.image('mars_art', 'assets/mars.jpg');
+        this.load.image('satellite', 'assets/satellite.png')
+        this.load.image('debris_1', 'assets/debris_1.png')
+        this.load.image('debris_2', 'assets/debris_2.png')
 
 
         this.load.spritesheet('ship', 
@@ -585,6 +729,10 @@ class Playgame_1 extends Phaser.Scene{
 
     }
     create(){
+        x_divisor = 4;
+        y_divisor = 4;
+        transitioning = false;
+        exploding = false;
         console.log("playgame1 create")
         this.add.image(0, 0, 'mars_art').setOrigin(0).setScale(1);
         let game_music_config = 
@@ -630,11 +778,8 @@ class Playgame_1 extends Phaser.Scene{
         
      
  
-    this.text = this.add.bitmapText(400, 200, 'atari', '', 38).setOrigin(0.5).setCenterAlign().setInteractive();
 
-    this.text.setText([
-        "Hold W - " + this.counter
-    ]);
+ 
        
         
     this.timer = this.time.addEvent({
@@ -662,7 +807,7 @@ class Playgame_1 extends Phaser.Scene{
     planet.setVisible(false);
     ship = this.physics.add.sprite(game.config.width/7+10,game.config.height/5+70, 'ship');
     
-    
+    battery = this.physics.add.sprite(game.config.width-60,30, 'battery');
   
     ship.body.allowGravity = false;
     this.anims.create({
@@ -671,25 +816,51 @@ class Playgame_1 extends Phaser.Scene{
         frameRate: 10,
         repeat: -1
     });
-    // this.anims.create({
-    //     key: 'noThrottle',
-    //     frames: this.anims.generateFrameNumbers('ship', { start: 0, end: 0 }),
-    //     frameRate: 10,
-    //     repeat: -1
-    // });
+ 
+    this.anims.create({
+        key: 'explode',
+        frames: this.anims.generateFrameNumbers('ship', { start: 5, end: 8}),
+        frameRate: 5,
+        repeat: -1
+    });
+ 
+    let explode = function()
+    {
+      
+        if(exploding == false)
+        exploding = true;
+        else return;
+        
+        ship.anims.stop();
+        ship.anims.play('explode',true);
+        
+        
+     
+    }
+   
+   spawn_enemies(this, 0.9,0.15);
+   
 
+
+        this.physics.add.overlap(ship, collision_enemies, explode, null, this);
+        this.text = this.add.bitmapText(400, 200, 'atari', '', 38).setOrigin(0.5).setCenterAlign().setInteractive();
+
+        this.text.setText([
+            "Hold W - " + this.counter
+        ]);
     }
 
 
    throttle (event) {
 
-
+    if(exploding)return;
   
         ship.anims.play('throttle', true);
         moving = true;
        
        }
        stopThrottle (event) {
+        if(exploding)return;
         
         ship.anims.stop();
       
@@ -726,7 +897,48 @@ class Playgame_1 extends Phaser.Scene{
        turning_down = false;
    }
     update(){
+        if(currentFuel < (start_fuel/5))
+        battery.setFrame(0);
+        else if(currentFuel < (start_fuel/5)*2)
+        battery.setFrame(1);
+        else if(currentFuel < (start_fuel/5)*3)
+        battery.setFrame(2);
+        else if(currentFuel < (start_fuel/5)*4)
+        battery.setFrame(4);
+        else if(currentFuel < (start_fuel/5)*5)
+        battery.setFrame(4);
 
+        if(ship.anims.currentFrame!=null && exploding){
+         
+            ship.anims.play('explode',true);
+        if(ship.anims.currentFrame.index === 4 && exploding){
+            console.log("frame 8")
+            win = false;
+            game_scene_1.scene.start('Highscore');
+        }
+    }
+        collision_enemies.forEach(function (child) {
+            
+            let from_center = Math.abs(child.body.y-200)+100;
+            child.body.velocity.y = -(child.speed)*(from_center);
+            
+
+            child.angle+=child.speed;
+        
+        });
+        if(exploding)
+    {
+        ship.body.velocity.x = 0;
+        ship.body.velocity.y = 0;
+        return;
+    }
+    if(currentFuel<=0){
+        if(exploding == false)
+        exploding = true;
+        else return;
+        
+        ship.anims.stop();
+        ship.anims.play('explode',true);}
         if(this.counter>0)
         {
         this.text.setText([
@@ -786,7 +998,7 @@ class Playgame_1 extends Phaser.Scene{
             clearInterval(inter)
             
             
-            game_scene.scene.start('Highscore');
+            game_scene_1.scene.start('Highscore');
         }}}, 50);
     }
 
@@ -871,6 +1083,8 @@ class Playgame_2 extends Phaser.Scene{
         this.text;
         this.timer;
         transitioning = false;
+        exploding = false;
+
 
 
         
@@ -879,7 +1093,10 @@ class Playgame_2 extends Phaser.Scene{
 
     }
     preload(){
-        
+        this.load.spritesheet('battery', 
+'assets/battery.png',
+{ frameWidth: 95, frameHeight: 45 }
+);
         this.load.bitmapFont('atari', 'assets/atari-smooth.png', 'assets/atari-smooth.xml');
         this.cameras.main.setBackgroundColor('#000000')
         
@@ -893,6 +1110,10 @@ class Playgame_2 extends Phaser.Scene{
 
     }
     create(){
+        x_divisor = 5;
+        y_divisor = 5;
+        transitioning = false;
+        exploding = false;
         this.add.image(0, 0, 'jupiter_art').setOrigin(0).setScale(1);
         let game_music_config = 
         {
@@ -937,12 +1158,7 @@ class Playgame_2 extends Phaser.Scene{
         
        
  
-    this.text = this.add.bitmapText(400, 200, 'atari', '', 38).setOrigin(0.5).setCenterAlign().setInteractive();
-
-    this.text.setText([
-        "Hold W - " + this.counter
-    ]);
-       
+   
         
     this.timer = this.time.addEvent({
         delay: 1000,                // ms
@@ -969,7 +1185,7 @@ class Playgame_2 extends Phaser.Scene{
     planet.setVisible(false);
     ship = this.physics.add.sprite(game.config.width/7+10,game.config.height/5+70, 'ship');
     
-    
+    battery = this.physics.add.sprite(game.config.width-60,30, 'battery');
   
     ship.body.allowGravity = false;
     this.anims.create({
@@ -978,26 +1194,49 @@ class Playgame_2 extends Phaser.Scene{
         frameRate: 10,
         repeat: -1
     });
-    // this.anims.create({
-    //     key: 'noThrottle',
-    //     frames: this.anims.generateFrameNumbers('ship', { start: 0, end: 0 }),
-    //     frameRate: 10,
-    //     repeat: -1
-    // });
+    this.anims.create({
+        key: 'explode',
+        frames: this.anims.generateFrameNumbers('ship', { start: 5, end: 8}),
+        frameRate: 5,
+        repeat: -1
+    });
+ 
+    let explode = function()
+    {
+        if(exploding == false)
+        exploding = true;
+        else return;
+        
+        ship.anims.stop();
+        ship.anims.play('explode',true);
+        
+        
+     
+    }
+   
+    spawn_enemies(this, 0.8,0.2);
+   
 
+
+        this.physics.add.overlap(ship, collision_enemies, explode, null, this);
+        this.text = this.add.bitmapText(400, 200, 'atari', '', 38).setOrigin(0.5).setCenterAlign().setInteractive();
+
+        this.text.setText([
+            "Hold W - " + this.counter
+        ]);
     }
 
 
    throttle (event) {
 
 
-    
+    if(exploding)return;
         ship.anims.play('throttle', true);
         moving = true;
        
        }
        stopThrottle (event) {
-
+        if(exploding)return;
         
         ship.anims.stop();
       
@@ -1034,8 +1273,46 @@ class Playgame_2 extends Phaser.Scene{
        turning_down = false;
    }
     update(){
+        if(currentFuel < (start_fuel/5))
+        battery.setFrame(0);
+        else if(currentFuel < (start_fuel/5)*2)
+        battery.setFrame(1);
+        else if(currentFuel < (start_fuel/5)*3)
+        battery.setFrame(2);
+        else if(currentFuel < (start_fuel/5)*4)
+        battery.setFrame(4);
+        else if(currentFuel < (start_fuel/5)*5)
+        battery.setFrame(4);
+        if(ship.anims.currentFrame!=null && exploding){
+            ship.anims.play('explode',true);
+        if(ship.anims.currentFrame.index === 4 && exploding){
+            console.log("frame 8")
+            win = false;
+            game_scene_2.scene.start('Highscore');
+        }
+    }
+        collision_enemies.forEach(function (child) {
+            
+            let from_center = Math.abs(child.body.y-200)+100;
+            child.body.velocity.y = -(child.speed)*(from_center);
+            
 
-  
+            child.angle+=child.speed;
+        
+        });
+        if(exploding)
+    {
+        ship.body.velocity.x = 0;
+        ship.body.velocity.y = 0;
+        return;
+    }
+    if(currentFuel<=0){
+        if(exploding == false)
+        exploding = true;
+        else return;
+        
+        ship.anims.stop();
+        ship.anims.play('explode',true);}
         if(this.counter>0)
         {
         this.text.setText([
@@ -1095,7 +1372,7 @@ class Playgame_2 extends Phaser.Scene{
             clearInterval(inter)
             
             
-            game_scene.scene.start('Highscore');
+            game_scene_2.scene.start('Highscore');
         }}}, 50);
     }
 
@@ -1159,6 +1436,8 @@ class Playgame_3 extends Phaser.Scene{
         this.text;
         this.timer;
         transitioning = false;
+        exploding = false;
+
 
 
         
@@ -1167,7 +1446,10 @@ class Playgame_3 extends Phaser.Scene{
 
     }
     preload(){
-        
+        this.load.spritesheet('battery', 
+'assets/battery.png',
+{ frameWidth: 95, frameHeight: 45 }
+);
         this.load.bitmapFont('atari', 'assets/atari-smooth.png', 'assets/atari-smooth.xml');
         this.cameras.main.setBackgroundColor('#000000')
         
@@ -1182,6 +1464,10 @@ class Playgame_3 extends Phaser.Scene{
 
     }
     create(){
+        x_divisor = 4;
+        y_divisor = 4;
+        transitioning = false;
+        exploding = false;
         this.add.image(0, 0, 'saturn_art').setOrigin(0).setScale(1);
         let game_music_config = 
         {
@@ -1226,12 +1512,6 @@ class Playgame_3 extends Phaser.Scene{
         
         
  
-    this.text = this.add.bitmapText(400, 200, 'atari', '', 38).setOrigin(0.5).setCenterAlign().setInteractive();
-
-    this.text.setText([
-        "Hold W - " + this.counter
-    ]);
-       
         
     this.timer = this.time.addEvent({
         delay: 1000,                // ms
@@ -1257,7 +1537,7 @@ class Playgame_3 extends Phaser.Scene{
     planet = this.physics.add.sprite(0, game.config.height/2, 'planet');
     planet.setVisible(false);
     ship = this.physics.add.sprite(game.config.width/7+10,game.config.height/5+70, 'ship');
-    
+    battery = this.physics.add.sprite(game.config.width-60,30, 'battery');
     
   
     ship.body.allowGravity = false;
@@ -1267,27 +1547,52 @@ class Playgame_3 extends Phaser.Scene{
         frameRate: 10,
         repeat: -1
     });
-    // this.anims.create({
-    //     key: 'noThrottle',
-    //     frames: this.anims.generateFrameNumbers('ship', { start: 0, end: 0 }),
-    //     frameRate: 10,
-    //     repeat: -1
-    // });
+    this.anims.create({
+        key: 'explode',
+        frames: this.anims.generateFrameNumbers('ship', { start: 5, end: 8}),
+        frameRate: 5,
+        repeat: -1
+    });
+ 
+    let explode = function()
+    {
+      
+        if(exploding == false)
+        exploding = true;
+        else return;
+        
+        ship.anims.stop();
+        ship.anims.play('explode',true);
+        
+        
+     
+    }
+   
+    spawn_enemies(this, 0.8,0.2);
+   
 
+
+        this.physics.add.overlap(ship, collision_enemies, explode, null, this);
+        this.text = this.add.bitmapText(400, 200, 'atari', '', 38).setOrigin(0.5).setCenterAlign().setInteractive();
+
+        this.text.setText([
+            "Hold W - " + this.counter
+        ]);
     }
 
 
    throttle (event) {
 
 
-    
+    if(exploding)return;
+
         ship.anims.play('throttle', true);
         moving = true;
        
        }
        stopThrottle (event) {
 
-        
+        if(exploding)return;
         ship.anims.stop();
       
         moving = false;
@@ -1323,7 +1628,47 @@ class Playgame_3 extends Phaser.Scene{
        turning_down = false;
    }
     update(){
+        if(currentFuel < (start_fuel/5))
+        battery.setFrame(0);
+        else if(currentFuel < (start_fuel/5)*2)
+        battery.setFrame(1);
+        else if(currentFuel < (start_fuel/5)*3)
+        battery.setFrame(2);
+        else if(currentFuel < (start_fuel/5)*4)
+        battery.setFrame(4);
+        else if(currentFuel < (start_fuel/5)*5)
+        battery.setFrame(4);
+        if(ship.anims.currentFrame!=null && exploding){
+     
+            ship.anims.play('explode',true);
+        if(ship.anims.currentFrame.index === 4 && exploding){
+            console.log("frame 8")
+            win = false;
+            game_scene_3.scene.start('Highscore');
+        }
+    }
+        collision_enemies.forEach(function (child) {
+            
+            let from_center = Math.abs(child.body.y-200)+100;
+            child.body.velocity.y = -(child.speed)*(from_center);
+            
 
+            child.angle+=child.speed;
+        
+        });
+        if(exploding)
+    {
+        ship.body.velocity.x = 0;
+        ship.body.velocity.y = 0;
+        return;
+    }
+    if(currentFuel<=0){
+        if(exploding == false)
+        exploding = true;
+        else return;
+        
+        ship.anims.stop();
+        ship.anims.play('explode',true);}
         if(this.counter>0)
         {
         this.text.setText([
@@ -1382,7 +1727,7 @@ class Playgame_3 extends Phaser.Scene{
              clearInterval(inter)
              
              
-             game_scene.scene.start('Highscore');
+             game_scene_3.scene.start('Highscore');
          }}}, 50);
     }
 
@@ -1512,6 +1857,8 @@ class Highscore extends Phaser.Scene {
         
     }
 	create() {
+        transitioning = false;
+        exploding = false;
         this.add.image(0, 0, 'highscore_art').setOrigin(0).setScale(1);
         this.text = this.add.bitmapText(100, 50, 'atari', '', 38);
 		this.cameras.main.setBackgroundColor('#000000')
