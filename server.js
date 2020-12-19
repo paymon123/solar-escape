@@ -6,7 +6,7 @@ const { Client } = require('pg');
 //const game = require("./game")
 
 let DB_URI = 
-   process.env.DATABASE_URL  
+    process.env.DATABASE_URL  
 //  | 
  //"postgresql://localhost:5432/bankly?user=postgres&password=postgres";
 

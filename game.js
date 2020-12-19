@@ -28,7 +28,7 @@ let game_scene_1;
 let game_scene_2;
 let game_scene_3;
 let highscore_scene;
-let start_fuel = 5000;
+let start_fuel = 4000;
 let currentFuel = start_fuel;
 let data_entered = false;
 let m = false;
@@ -52,8 +52,7 @@ spaceKey;
 moving = false;
 currentFuel = start_fuel;
 HS;
-HS_URL = public_URL + "highscores";
-NEW_URL = public_URL + "newscore";
+
 win = false;
 
 menu_scene;
@@ -108,8 +107,8 @@ window.onload = function() {
     $.ajax({url: HS_URL, success: function(result){
         
         HS = JSON.parse(result);
-        console.log("got highscores" + HS)
-      }});
+
+    }});
 
       let gameConfig = {
         type: Phaser.AUTO,
@@ -164,13 +163,13 @@ let spawn_enemies = function(scene, density, speed)
            }
            y_row+=getRandomInt(i*1000*density);
        let enemy = (scene.physics.add.sprite(x_row, y_row, key));
+       enemy.setSize(enemy.body.width*0.7, enemy.body.height*0.7, true);
        let s = getRandomInt(3)+1;
        enemy.speed = s*speed
        collision_enemies.push(enemy);
        }
 
    }
-
    let spawn_asteroids = function(scene, density, speed)
    {
        collision_enemies = [];
@@ -179,22 +178,24 @@ let spawn_enemies = function(scene, density, speed)
        {
            let x_row = getRandomInt(600)+200
            let rand = getRandomInt(5);
-           let key = "satellite"
-           if(rand==3) {y_row+=60;key = "debris_1"}
-           else if(rand==4) {y_row+=100;key = "debris_2"}
+           let key = "asteroid1"
+           if(rand==3) {y_row+=80;key = "asteroid2"}
+           
            else{
                y_row+=50;
-            key = "satellite";
+            key = "asteroid1";
 
            }
            y_row+=getRandomInt(i*1000*density);
        let enemy = (scene.physics.add.sprite(x_row, y_row, key));
+       enemy.setSize(enemy.body.width*0.8, enemy.body.height*0.8, true);
        let s = getRandomInt(3)+1;
        enemy.speed = s*speed
        collision_enemies.push(enemy);
        }
 
    }
+  
 class Menu extends Phaser.Scene {
 	
 	constructor() {
@@ -236,11 +237,10 @@ class Menu extends Phaser.Scene {
         
         this.add.image(0, 0, 'menu_art').setOrigin(0).setScale(1);
         global_music = game.sound.add('menu_music', menu_config);
-        var element = this.add.dom(game.config.width-50, game.config.height-50).createFromCache('button');
+        var element = this.add.dom(game.config.width-40, game.config.height-40).createFromCache('button');
         $("#mute").css({"background": "url('../assets/unmute.png')"});
        
         $("#mute").click(function(){
-            console.log("clicked")
             if(m){
                 m= false;
                 global_music.stop();
@@ -278,10 +278,7 @@ class Menu extends Phaser.Scene {
    
 	update(){
         
-        // if(music == false){
-        //     console.log("playing")
         
-        // music=true}
 
 }
 
@@ -360,7 +357,7 @@ this.load.spritesheet('battery',
         }
 
         global_music= game.sound.add('game_music', game_music_config);
-        var element = this.add.dom(game.config.width-50, game.config.height-50).createFromCache('button');
+        var element = this.add.dom(game.config.width-40, game.config.height-40).createFromCache('button');
         if(m)
         {
            global_music.play();
@@ -418,7 +415,6 @@ this.load.spritesheet('battery',
     planet.setVisible(false);
     
     ship = this.physics.add.sprite(game.config.width/7+10,game.config.height/5+70, 'ship');
-    battery = this.physics.add.sprite(game.config.width-60,30, 'battery');
     
   
     ship.body.allowGravity = false;
@@ -455,11 +451,14 @@ this.load.spritesheet('battery',
 
 
         this.physics.add.overlap(ship, collision_enemies, explode, null, this);
+        
         this.text = this.add.bitmapText(400, 200, 'atari', '', 38).setOrigin(0.5).setCenterAlign().setInteractive();
 
         this.text.setText([
             "Hold W - " + this.counter
         ]);
+        battery = this.physics.add.sprite(game.config.width-60,30, 'battery');
+    battery.setFrame(4);
            
     }
 
@@ -518,25 +517,37 @@ this.load.spritesheet('battery',
         else if(currentFuel < (start_fuel/5)*3)
         battery.setFrame(2);
         else if(currentFuel < (start_fuel/5)*4)
-        battery.setFrame(4);
+        battery.setFrame(3);
         else if(currentFuel < (start_fuel/5)*5)
         battery.setFrame(4);
         if(ship.anims.currentFrame!=null && exploding){
      
             ship.anims.play('explode',true);
         if(ship.anims.currentFrame.index === 4 && exploding){
-            console.log("frame 8")
+        
             win = false;
             game_scene.scene.start('Highscore');
         }
     }
         collision_enemies.forEach(function (child) {
-            
+           
             let from_center = Math.abs(child.body.y-200)+100;
-            child.body.velocity.y = -(child.speed)*(from_center);
+            child.body.velocity.y = -(child.speed)*(from_center)*2;
+
+     
             
 
             child.angle+=child.speed;
+            if (child.body.y > game.config.height || child.body.y < -50)return;
+            if(child.body.y > game.config.height /2)
+            {
+                    child.body.x-=(game.config.height/2 - child.body.y)/250;
+            }
+            else
+            {
+                child.body.x-=(game.config.height/2- child.body.y)/250;
+            }
+         
         
         });
         if(exploding)
@@ -733,7 +744,6 @@ class Playgame_1 extends Phaser.Scene{
         y_divisor = 4;
         transitioning = false;
         exploding = false;
-        console.log("playgame1 create")
         this.add.image(0, 0, 'mars_art').setOrigin(0).setScale(1);
         let game_music_config = 
         {
@@ -747,7 +757,7 @@ class Playgame_1 extends Phaser.Scene{
         }
 
         
-        var element = this.add.dom(game.config.width-50, game.config.height-50).createFromCache('button');
+        var element = this.add.dom(game.config.width-40, game.config.height-40).createFromCache('button');
         if(m)
         {
           
@@ -761,7 +771,6 @@ class Playgame_1 extends Phaser.Scene{
 
        
         $("#mute").click(function(){
-            console.log("clicked")
             if(m){
                 m= false;
                 global_music.stop();
@@ -807,8 +816,7 @@ class Playgame_1 extends Phaser.Scene{
     planet.setVisible(false);
     ship = this.physics.add.sprite(game.config.width/7+10,game.config.height/5+70, 'ship');
     
-    battery = this.physics.add.sprite(game.config.width-60,30, 'battery');
-  
+    
     ship.body.allowGravity = false;
     this.anims.create({
         key: 'throttle',
@@ -848,6 +856,8 @@ class Playgame_1 extends Phaser.Scene{
         this.text.setText([
             "Hold W - " + this.counter
         ]);
+        battery = this.physics.add.sprite(game.config.width-60,30, 'battery');
+    battery.setFrame(4);
     }
 
 
@@ -904,7 +914,7 @@ class Playgame_1 extends Phaser.Scene{
         else if(currentFuel < (start_fuel/5)*3)
         battery.setFrame(2);
         else if(currentFuel < (start_fuel/5)*4)
-        battery.setFrame(4);
+        battery.setFrame(3);
         else if(currentFuel < (start_fuel/5)*5)
         battery.setFrame(4);
 
@@ -912,7 +922,6 @@ class Playgame_1 extends Phaser.Scene{
          
             ship.anims.play('explode',true);
         if(ship.anims.currentFrame.index === 4 && exploding){
-            console.log("frame 8")
             win = false;
             game_scene_1.scene.start('Highscore');
         }
@@ -924,6 +933,15 @@ class Playgame_1 extends Phaser.Scene{
             
 
             child.angle+=child.speed;
+            if (child.body.y > game.config.height || child.body.y < -50)return;
+            if(child.body.y > game.config.height /2)
+            {
+                    child.body.x-=(game.config.height/2 - child.body.y)/250;
+            }
+            else
+            {
+                child.body.x-=(game.config.height/2- child.body.y)/250;
+            }
         
         });
         if(exploding)
@@ -1085,7 +1103,7 @@ class Playgame_2 extends Phaser.Scene{
         transitioning = false;
         exploding = false;
 
-
+        
 
         
 
@@ -1093,6 +1111,10 @@ class Playgame_2 extends Phaser.Scene{
 
     }
     preload(){
+        
+        this.load.image('asteroid1', 'assets/asteroid1.png')
+        this.load.image('asteroid2', 'assets/asteroid2.png')
+
         this.load.spritesheet('battery', 
 'assets/battery.png',
 { frameWidth: 95, frameHeight: 45 }
@@ -1127,7 +1149,7 @@ class Playgame_2 extends Phaser.Scene{
         }
 
         
-        var element = this.add.dom(game.config.width-50, game.config.height-50).createFromCache('button');
+        var element = this.add.dom(game.config.width-40, game.config.height-40).createFromCache('button');
         if(m)
         {
            
@@ -1141,7 +1163,6 @@ class Playgame_2 extends Phaser.Scene{
 
        
         $("#mute").click(function(){
-            console.log("clicked")
             if(m){
                 m= false;
                 global_music.stop();
@@ -1185,8 +1206,7 @@ class Playgame_2 extends Phaser.Scene{
     planet.setVisible(false);
     ship = this.physics.add.sprite(game.config.width/7+10,game.config.height/5+70, 'ship');
     
-    battery = this.physics.add.sprite(game.config.width-60,30, 'battery');
-  
+   
     ship.body.allowGravity = false;
     this.anims.create({
         key: 'throttle',
@@ -1214,7 +1234,8 @@ class Playgame_2 extends Phaser.Scene{
      
     }
    
-    spawn_enemies(this, 0.8,0.2);
+  
+    spawn_asteroids(this, 0.8,0.2);
    
 
 
@@ -1224,6 +1245,8 @@ class Playgame_2 extends Phaser.Scene{
         this.text.setText([
             "Hold W - " + this.counter
         ]);
+        battery = this.physics.add.sprite(game.config.width-60,30, 'battery');
+        battery.setFrame(4);
     }
 
 
@@ -1280,13 +1303,12 @@ class Playgame_2 extends Phaser.Scene{
         else if(currentFuel < (start_fuel/5)*3)
         battery.setFrame(2);
         else if(currentFuel < (start_fuel/5)*4)
-        battery.setFrame(4);
+        battery.setFrame(3);
         else if(currentFuel < (start_fuel/5)*5)
         battery.setFrame(4);
         if(ship.anims.currentFrame!=null && exploding){
             ship.anims.play('explode',true);
         if(ship.anims.currentFrame.index === 4 && exploding){
-            console.log("frame 8")
             win = false;
             game_scene_2.scene.start('Highscore');
         }
@@ -1298,6 +1320,15 @@ class Playgame_2 extends Phaser.Scene{
             
 
             child.angle+=child.speed;
+            if (child.body.y > game.config.height || child.body.y < -50)return;
+            if(child.body.y > game.config.height /2)
+            {
+                    child.body.x-=(game.config.height/2 - child.body.y)/250;
+            }
+            else
+            {
+                child.body.x-=(game.config.height/2- child.body.y)/250;
+            }
         
         });
         if(exploding)
@@ -1446,6 +1477,8 @@ class Playgame_3 extends Phaser.Scene{
 
     }
     preload(){
+        this.load.image('asteroid1', 'assets/asteroid1.png')
+        this.load.image('asteroid2', 'assets/asteroid2.png')
         this.load.spritesheet('battery', 
 'assets/battery.png',
 { frameWidth: 95, frameHeight: 45 }
@@ -1481,7 +1514,7 @@ class Playgame_3 extends Phaser.Scene{
         }
 
         
-        var element = this.add.dom(game.config.width-50, game.config.height-50).createFromCache('button');
+        var element = this.add.dom(game.config.width-40, game.config.height-40).createFromCache('button');
         if(m)
         {
         
@@ -1495,7 +1528,6 @@ class Playgame_3 extends Phaser.Scene{
 
        
         $("#mute").click(function(){
-            console.log("clicked")
             if(m){
                 m= false;
                 global_music.stop();
@@ -1537,7 +1569,6 @@ class Playgame_3 extends Phaser.Scene{
     planet = this.physics.add.sprite(0, game.config.height/2, 'planet');
     planet.setVisible(false);
     ship = this.physics.add.sprite(game.config.width/7+10,game.config.height/5+70, 'ship');
-    battery = this.physics.add.sprite(game.config.width-60,30, 'battery');
     
   
     ship.body.allowGravity = false;
@@ -1568,7 +1599,7 @@ class Playgame_3 extends Phaser.Scene{
      
     }
    
-    spawn_enemies(this, 0.8,0.2);
+    spawn_asteroids(this, 0.7,0.2);
    
 
 
@@ -1578,6 +1609,8 @@ class Playgame_3 extends Phaser.Scene{
         this.text.setText([
             "Hold W - " + this.counter
         ]);
+        battery = this.physics.add.sprite(game.config.width-60,30, 'battery');
+    battery.setFrame(4);
     }
 
 
@@ -1635,14 +1668,13 @@ class Playgame_3 extends Phaser.Scene{
         else if(currentFuel < (start_fuel/5)*3)
         battery.setFrame(2);
         else if(currentFuel < (start_fuel/5)*4)
-        battery.setFrame(4);
+        battery.setFrame(3);
         else if(currentFuel < (start_fuel/5)*5)
         battery.setFrame(4);
         if(ship.anims.currentFrame!=null && exploding){
      
             ship.anims.play('explode',true);
         if(ship.anims.currentFrame.index === 4 && exploding){
-            console.log("frame 8")
             win = false;
             game_scene_3.scene.start('Highscore');
         }
@@ -1654,6 +1686,15 @@ class Playgame_3 extends Phaser.Scene{
             
 
             child.angle+=child.speed;
+            if (child.body.y > game.config.height || child.body.y < -50)return;
+            if(child.body.y > game.config.height /2)
+            {
+                    child.body.x-=(game.config.height/2 - child.body.y)/250;
+            }
+            else
+            {
+                child.body.x-=(game.config.height/2- child.body.y)/250;
+            }
         
         });
         if(exploding)
@@ -1850,7 +1891,6 @@ class Highscore extends Phaser.Scene {
     {
         if(data_entered==false)return;
       
-        console.log("new from highscores")
         game.registry.destroy(); // destroy registry
         game.events.off();
         newGame();
@@ -1926,27 +1966,12 @@ class Highscore extends Phaser.Scene {
         }
 		
 
-		// this.element = this.add.dom(400, 225).createFromCache("nameform");
-		// this.element.visible = true;
-	    // this.element.addListener('click');
-		// this.enterName();
-					
+	
 }
    
 	update(){
       
-        //console.log("hello")
-        //this.showHighscore();
 		
-		// if (!element.visible){
-		// 	this.showHighscore();
-		// }
-		
-		// if(element.visible){
-		// 	this.input.keyboard.once("keydown-" + "ENTER", () =>{
-		// 		this.enterName();
-		// 	});
-		// }
 	}
 	
 	
@@ -1963,7 +1988,6 @@ class Highscore extends Phaser.Scene {
 	
 	showHighscore(page) {
         this.highscores = HS
-        console.log("show highscores" + this.highscores)
         this.highscores = this.highscores.sort(this.compare)
    
         let lineLength = 15;
