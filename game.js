@@ -10,12 +10,19 @@ let ship;
 let cursors;
 let spaceKey;
 let moving = false;
-
+let thrust_start;
+let thrust_end;
 let HS;
 let HS_URL = public_URL + "highscores";
 let NEW_URL = public_URL + "newscore";
 let win = false;
 let exploding = false;
+let asteroid_collision;
+let sat_collision;
+let gravity_burn;
+let gravity_shake;
+let button_on;
+let button_off;
 function getRandomInt(max) {
     let  v = Math.floor(Math.random() * Math.floor(max));
    
@@ -28,7 +35,7 @@ let game_scene_1;
 let game_scene_2;
 let game_scene_3;
 let highscore_scene;
-let start_fuel = 4000;
+let start_fuel = 3500;
 let currentFuel = start_fuel;
 let data_entered = false;
 let m = false;
@@ -141,7 +148,7 @@ window.onload = function() {
 
 
 
-    //newGame();
+ 
     
     
 }
@@ -212,7 +219,8 @@ class Menu extends Phaser.Scene {
     {
         this.load.html('button', 'assets/audio.html');
         this.load.audio("menu_music", ["assets/menu.mp3"]);
-        
+        this.load.audio("button_on", ["assets/button_on.mp3"]);
+        this.load.audio("button_off", ["assets/button_off.mp3"]);
         this.load.image('menu_art', 'assets/menu_art.jpg');
         this.load.bitmapFont('atari', 'assets/atari-smooth.png', 'assets/atari-smooth.xml');
 
@@ -233,21 +241,34 @@ class Menu extends Phaser.Scene {
             loop: true,
             delay: 0
         }
-    
+        let effect_config = 
+        {
+            mute: false,
+            volume: 1,
+            rate: 1,
+            detune: 0,
+            seek: 0,
+            loop: false,
+            delay: 0
+        }
         
         this.add.image(0, 0, 'menu_art').setOrigin(0).setScale(1);
         global_music = game.sound.add('menu_music', menu_config);
+        button_on = game.sound.add('button_on', effect_config);
+        button_off = game.sound.add('button_off', effect_config);
         var element = this.add.dom(game.config.width-40, game.config.height-40).createFromCache('button');
         $("#mute").css({"background": "url('../assets/unmute.png')"});
        
         $("#mute").click(function(){
             if(m){
+                button_off.play();
                 m= false;
                 global_music.stop();
             $("#mute").css({"background": "url('../assets/unmute.png')"});
             }
             else{
                 m=true;
+                button_on.play();
                 global_music.play();
                 $("#mute").css({"background": "url('../assets/mute.png')"});
             }
@@ -259,7 +280,7 @@ class Menu extends Phaser.Scene {
 		
 		
 	
-		//this.text = this.add.bitmapText(100, 50, 'atari', '', 38);
+
        
         this.input.on('pointerdown', function(pointer)
         {
@@ -270,7 +291,7 @@ class Menu extends Phaser.Scene {
 
         });
 
-        //this.text.setText(["Menu"], 400, 200);
+
 		
 	
 					
@@ -319,8 +340,16 @@ class Playgame extends Phaser.Scene{
         this.load.bitmapFont('atari', 'assets/atari-smooth.png', 'assets/atari-smooth.xml');
         this.cameras.main.setBackgroundColor('#000000')
         this.load.audio("game_music", ["assets/gameplay.mp3"]);
+        this.load.audio("gravity_shake", ["assets/gravity_shake.mp3"]);
+        this.load.audio("thrust_start", ["assets/thrust_start.mp3"]);
+        this.load.audio("thrust_end", ["assets/thrust_end.mp3"]);
+        this.load.audio("satellite_collision", ["assets/satellite_collision.mp3"]);
+        this.load.audio("asteroid_collision", ["assets/asteroid_collision.mp3"]);
+      
+        this.load.audio("gravity_burn", ["assets/gravity_burn.mp3"]);
         this.load.image('planet', 'assets/planet.png');
         this.load.image('earth_art', 'assets/earth.jpg');
+        
 
         this.load.spritesheet('ship', 
     'assets/spaceship.png',
@@ -355,8 +384,24 @@ this.load.spritesheet('battery',
             loop: true,
             delay: 0
         }
+        let effect_config = 
+        {
+            mute: false,
+            volume: 1,
+            rate: 1,
+            detune: 0,
+            seek: 0,
+            loop: false,
+            delay: 0
+        }
 
         global_music= game.sound.add('game_music', game_music_config);
+        thrust_start = game.sound.add('thrust_start', effect_config);
+        thrust_end = game.sound.add('thrust_end', effect_config);
+        sat_collision = game.sound.add('satellite_collision', effect_config);
+        gravity_burn = game.sound.add('gravity_burn', effect_config);
+        gravity_shake = game.sound.add('gravity_shake', effect_config);
+        asteroid_collision = game.sound.add('asteroid_collision', effect_config);
         var element = this.add.dom(game.config.width-40, game.config.height-40).createFromCache('button');
         if(m)
         {
@@ -373,12 +418,14 @@ this.load.spritesheet('battery',
         $("#mute").click(function(event){
            
             if(m){
+                button_off.play();
                 m= false;
                 global_music.stop();
             $("#mute").css({"background": "url('../assets/unmute.png')"});
             }
             else{
                 m=true;
+                button_on.play();
                 global_music.play();
                 $("#mute").css({"background": "url('../assets/mute.png')"});
             }
@@ -410,7 +457,7 @@ this.load.spritesheet('battery',
     this.input.keyboard.on('keyup_D', this.turning_off_down, this);
     this.input.keyboard.on('keydown_W', this.throttle, this);
     this.input.keyboard.on('keyup_W', this.stopThrottle, this);
-    // cursors = this.input.keyboard.createCursorKeys();
+    
     planet = this.physics.add.sprite(0, game.config.height/2, 'planet');
     planet.setVisible(false);
     
@@ -437,7 +484,9 @@ this.load.spritesheet('battery',
     {
       
         if(exploding == false)
+        {sat_collision.play();
         exploding = true;
+        }
         else return;
         
         ship.anims.stop();
@@ -467,6 +516,9 @@ this.load.spritesheet('battery',
 
     
     if(exploding)return;
+    thrust_end.stop();
+    if (!thrust_start.isPlaying)
+    thrust_start.play();
         ship.anims.play('throttle', true);
         moving = true;
        
@@ -474,6 +526,8 @@ this.load.spritesheet('battery',
        stopThrottle (event) {
        
         if(exploding)return;
+        thrust_start.stop();
+    thrust_end.play();
         ship.anims.stop();
       
         moving = false;
@@ -558,7 +612,9 @@ this.load.spritesheet('battery',
     }
     if(currentFuel<=0){
         if(exploding == false)
-        exploding = true;
+        {sat_collision.play();
+            exploding = true;
+            }
         else return;
         
         ship.anims.stop();
@@ -587,7 +643,7 @@ this.load.spritesheet('battery',
     }
     else if (ship.body.x<=0-ship.body.width)
     {
-        this.stopThrottle();
+        //this.stopThrottle();
        if(transitioning == false)
        transitioning =  true;
        else
@@ -603,7 +659,8 @@ this.load.spritesheet('battery',
         var inter = setInterval(function(){
            
            ship.body.updateFromGameObject();
-           
+           if(!gravity_burn.isPlaying)
+           gravity_burn.play()
            if(ship.body.x<-100)
            {
      
@@ -621,6 +678,7 @@ this.load.spritesheet('battery',
             if(c==100)
         {
             
+          
             clearInterval(inter)
             
             
@@ -644,7 +702,12 @@ this.load.spritesheet('battery',
 
     ship.body.velocity.y/=y_divisor;
     ship.body.velocity.x/=x_divisor;
-
+    if(ship.body.y>game.config.height/2-10 && ship.body.y<game.config.height/2+10)
+    {
+        if(!gravity_shake.isPlaying)
+        gravity_shake.play();
+    }
+    else gravity_shake.stop();
   
         if(turning_up){
         
@@ -773,11 +836,13 @@ class Playgame_1 extends Phaser.Scene{
         $("#mute").click(function(){
             if(m){
                 m= false;
+                button_off.play();
                 global_music.stop();
             $("#mute").css({"background": "url('../assets/unmute.png')"});
             }
             else{
                 m=true;
+                button_on.play();
                 global_music.play();
                 $("#mute").css({"background": "url('../assets/mute.png')"});
             }
@@ -836,7 +901,10 @@ class Playgame_1 extends Phaser.Scene{
     {
       
         if(exploding == false)
-        exploding = true;
+        {sat_collision.play();
+            exploding = true;
+            }
+       
         else return;
         
         ship.anims.stop();
@@ -864,14 +932,17 @@ class Playgame_1 extends Phaser.Scene{
    throttle (event) {
 
     if(exploding)return;
-  
+    thrust_end.stop();
+    if (!thrust_start.isPlaying)
+    thrust_start.play();
         ship.anims.play('throttle', true);
         moving = true;
        
        }
        stopThrottle (event) {
         if(exploding)return;
-        
+        thrust_start.stop();
+        thrust_end.play();
         ship.anims.stop();
       
         moving = false;
@@ -952,7 +1023,9 @@ class Playgame_1 extends Phaser.Scene{
     }
     if(currentFuel<=0){
         if(exploding == false)
-        exploding = true;
+        {sat_collision.play();
+            exploding = true;
+            }
         else return;
         
         ship.anims.stop();
@@ -979,7 +1052,7 @@ class Playgame_1 extends Phaser.Scene{
     }
     else if (ship.body.x<=0-ship.body.width)
     {
-        this.stopThrottle();
+       
         if(transitioning == false)
        transitioning =  true;
        else
@@ -995,7 +1068,8 @@ class Playgame_1 extends Phaser.Scene{
         var inter = setInterval(function(){
            
            ship.body.updateFromGameObject();
-           
+           if(!gravity_burn.isPlaying)
+           gravity_burn.play()
            if(ship.body.x<-100)
            {
      
@@ -1012,7 +1086,7 @@ class Playgame_1 extends Phaser.Scene{
             ship.setScale(1-(c/100));
             if(c==100)
         {
-            
+      
             clearInterval(inter)
             
             
@@ -1035,7 +1109,12 @@ class Playgame_1 extends Phaser.Scene{
     ship.body.velocity.y/=y_divisor;
     ship.body.velocity.x/=x_divisor;
 
-  
+    if(ship.body.y>game.config.height/2-10 && ship.body.y<game.config.height/2+10)
+    {
+        if(!gravity_shake.isPlaying)
+        gravity_shake.play();
+    }
+    else gravity_shake.stop();
         if(turning_up){
         
         ship.angle-=1;
@@ -1165,11 +1244,13 @@ class Playgame_2 extends Phaser.Scene{
         $("#mute").click(function(){
             if(m){
                 m= false;
+                button_off.play();
                 global_music.stop();
             $("#mute").css({"background": "url('../assets/unmute.png')"});
             }
             else{
                 m=true;
+                button_on.play();
                 global_music.play();
                 $("#mute").css({"background": "url('../assets/mute.png')"});
             }
@@ -1224,7 +1305,9 @@ class Playgame_2 extends Phaser.Scene{
     let explode = function()
     {
         if(exploding == false)
-        exploding = true;
+        {asteroid_collision.play();
+            exploding = true;
+            }
         else return;
         
         ship.anims.stop();
@@ -1254,13 +1337,17 @@ class Playgame_2 extends Phaser.Scene{
 
 
     if(exploding)return;
+    thrust_end.stop();
+    if (!thrust_start.isPlaying)
+    thrust_start.play();
         ship.anims.play('throttle', true);
         moving = true;
        
        }
        stopThrottle (event) {
         if(exploding)return;
-        
+        thrust_start.stop();
+        thrust_end.play();
         ship.anims.stop();
       
         moving = false;
@@ -1339,7 +1426,9 @@ class Playgame_2 extends Phaser.Scene{
     }
     if(currentFuel<=0){
         if(exploding == false)
-        exploding = true;
+        {asteroid_collision.play();
+            exploding = true;
+            }
         else return;
         
         ship.anims.stop();
@@ -1366,7 +1455,7 @@ class Playgame_2 extends Phaser.Scene{
     }
     else if (ship.body.x<=0-ship.body.width)
     {
-        this.stopThrottle();
+    
         if(transitioning == false)
        transitioning =  true;
        else
@@ -1382,7 +1471,8 @@ class Playgame_2 extends Phaser.Scene{
         var inter = setInterval(function(){
            
            ship.body.updateFromGameObject();
-           
+           if(!gravity_burn.isPlaying)
+           gravity_burn.play()
            if(ship.body.x<-100)
            {
      
@@ -1399,7 +1489,7 @@ class Playgame_2 extends Phaser.Scene{
             ship.setScale(1-(c/100));
             if(c==100)
         {
-            
+       
             clearInterval(inter)
             
             
@@ -1421,7 +1511,12 @@ class Playgame_2 extends Phaser.Scene{
 
     ship.body.velocity.y/=y_divisor;
     ship.body.velocity.x/=x_divisor;
-
+    if(ship.body.y>game.config.height/2-10 && ship.body.y<game.config.height/2+10)
+    {
+        if(!gravity_shake.isPlaying)
+        gravity_shake.play();
+    }
+    else gravity_shake.stop();
   
         if(turning_up){
         
@@ -1530,11 +1625,13 @@ class Playgame_3 extends Phaser.Scene{
         $("#mute").click(function(){
             if(m){
                 m= false;
+                button_off.play();
                 global_music.stop();
             $("#mute").css({"background": "url('../assets/unmute.png')"});
             }
             else{
                 m=true;
+                button_on.play();
                 global_music.play();
                 $("#mute").css({"background": "url('../assets/mute.png')"});
             }
@@ -1589,7 +1686,9 @@ class Playgame_3 extends Phaser.Scene{
     {
       
         if(exploding == false)
-        exploding = true;
+        {asteroid_collision.play();
+            exploding = true;
+            }
         else return;
         
         ship.anims.stop();
@@ -1618,6 +1717,9 @@ class Playgame_3 extends Phaser.Scene{
 
 
     if(exploding)return;
+    thrust_end.stop();
+    if (!thrust_start.isPlaying)
+    thrust_start.play();
 
         ship.anims.play('throttle', true);
         moving = true;
@@ -1626,6 +1728,8 @@ class Playgame_3 extends Phaser.Scene{
        stopThrottle (event) {
 
         if(exploding)return;
+        thrust_start.stop();
+        thrust_end.play();
         ship.anims.stop();
       
         moving = false;
@@ -1705,7 +1809,9 @@ class Playgame_3 extends Phaser.Scene{
     }
     if(currentFuel<=0){
         if(exploding == false)
-        exploding = true;
+        {asteroid_collision.play();
+            exploding = true;
+            }
         else return;
         
         ship.anims.stop();
@@ -1731,7 +1837,7 @@ class Playgame_3 extends Phaser.Scene{
     }
     else if (ship.body.x<=0-ship.body.width)
     {
-       this.stopThrottle();
+     
         if(transitioning == false)
         transitioning =  true;
         else
@@ -1747,7 +1853,8 @@ class Playgame_3 extends Phaser.Scene{
          var inter = setInterval(function(){
             
             ship.body.updateFromGameObject();
-            
+            if(!gravity_burn.isPlaying)
+            gravity_burn.play()
             if(ship.body.x<-100)
             {
       
@@ -1764,7 +1871,7 @@ class Playgame_3 extends Phaser.Scene{
              ship.setScale(1-(c/100));
              if(c==100)
          {
-             
+         
              clearInterval(inter)
              
              
@@ -1787,7 +1894,12 @@ class Playgame_3 extends Phaser.Scene{
     ship.body.velocity.y/=y_divisor;
     ship.body.velocity.x/=x_divisor;
 
-  
+    if(ship.body.y>game.config.height/2-10 && ship.body.y<game.config.height/2+10)
+    {
+        if(!gravity_shake.isPlaying)
+        gravity_shake.play();
+    }
+    else gravity_shake.stop();
         if(turning_up){
         
         ship.angle-=1;
@@ -1897,6 +2009,8 @@ class Highscore extends Phaser.Scene {
         
     }
 	create() {
+        thrust_start.stop();
+        thrust_end.stop();
         transitioning = false;
         exploding = false;
         this.add.image(0, 0, 'highscore_art').setOrigin(0).setScale(1);
