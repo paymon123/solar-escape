@@ -1,3 +1,3 @@
-Play at - https://solar-escape.herokuapp.com/
+[Play](https://solar-escape.herokuapp.com/)
 
-Made in 3 days using Phaser3, placing 13/17
+Made in 3 days using Phaser 3, scored 13/17
